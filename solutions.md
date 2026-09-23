@@ -109,3 +109,44 @@ regardless of machine.
   a `setState` call while the app is backgrounded doesn't crash and the
   displayed countdown will simply catch up to the correct value on the next
   visible tick — not worth the added complexity for this ticket's scope.
+
+### RES-103 · Requests pile up the longer you browse
+
+- **Root cause:** `DealDetailsController.onInit()` calls
+  `ever(cartService.itemCount, (_) => _recheckAvailability())` every time a
+  deal details page is opened, registering a new GetX `Worker` listener on
+  `cartService.itemCount`. `CartService` is a `GetxService` that "lives for
+  the whole session" (permanent singleton), so its `itemCount` observable
+  persists for the app's lifetime. `DealDetailsController` never overrides
+  `onClose()`, so the `ever()` worker is never cancelled when the controller
+  is disposed — it keeps listening indefinitely. Each deal page visited adds
+  one more permanent listener on `itemCount`. Any cart change (e.g. tapping
+  "Add to bag") fires `itemCount`'s listeners, so every deal ever viewed in
+  the session triggers its own `dealRepo.fetchById(deal.id)` call
+  (`GET /deals/:id`) — one request per previously-viewed deal, all at once,
+  growing with every additional deal opened.
+
+- **Fix:** Capture the `Worker` returned by `ever()` in a field
+  (`Worker? _cartWorker`) and cancel it in an added `onClose()` override
+  (`_cartWorker?.dispose()`). This ties the listener's lifetime to the
+  controller's lifetime, so leaving a deal page removes its listener from
+  `cartService.itemCount` and no leaked listeners accumulate across the
+  session.
+
+- **Why this fix (and what alternative was rejected):** Considered removing
+  the `ever()` re-check entirely and instead re-fetching availability only
+  when the user re-opens or resumes the deal page (e.g. in `didPopNext` or
+  on cart-screen return). Rejected because it would delay the "never show
+  stale availability" guarantee the original code was written for — the
+  worker itself is the correct pattern, it just needs a matching
+  `onClose()`. This fix keeps the intended behavior (live re-check on any
+  cart change) while fixing the actual bug, which is a missing disposal, not
+  a wrong approach.
+
+- **Edge cases considered / not handled:** Repeated open/close of the same
+  deal page no longer accumulates duplicate listeners for that deal, since
+  each controller instance's own worker is disposed with it. Not handled:
+  no de-duplication if two *simultaneously open* deal pages exist for the
+  same deal id (e.g. via two navigation stacks) — out of scope since the
+  app's navigation doesn't currently allow that, and it's an existing
+  constraint unrelated to this leak.
