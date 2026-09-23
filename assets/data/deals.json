@@ -1,0 +1,1764 @@
+[
+  {
+    "id": 1,
+    "storeId": 1,
+    "name": "Mystery Thai Feast",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal1",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 2,
+    "rating": 4.9,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": 25
+  },
+  {
+    "id": 2,
+    "storeId": 1,
+    "name": "Chef's Thai Bundle",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal2",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 4,
+    "rating": null,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 3,
+    "storeId": 1,
+    "name": "End-of-day Thai Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal3",
+    "originalPrice": 350,
+    "price": 116,
+    "quantityLeft": 5,
+    "rating": 4.1,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 4,
+    "storeId": 2,
+    "name": "Last-call Bakery Bag",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal4",
+    "originalPrice": 150,
+    "price": 50,
+    "quantityLeft": 4,
+    "rating": 3.8,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 5,
+    "storeId": 2,
+    "name": "Last-call Bakery Box",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal5",
+    "originalPrice": 120,
+    "price": 40,
+    "quantityLeft": 2,
+    "rating": 4.2,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": 8
+  },
+  {
+    "id": 6,
+    "storeId": 2,
+    "name": "Golden Bakery Basket",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal6",
+    "originalPrice": 180,
+    "price": 90,
+    "quantityLeft": 1,
+    "rating": null,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 7,
+    "storeId": 2,
+    "name": "Surprise Bakery Box",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal7",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 3,
+    "rating": 4.7,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 8,
+    "storeId": 2,
+    "name": "Golden Bakery Bundle",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal8",
+    "originalPrice": 220,
+    "price": 73,
+    "quantityLeft": 2,
+    "rating": 3.8,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 9,
+    "storeId": 3,
+    "name": "Surprise Sushi Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal9",
+    "originalPrice": 500,
+    "price": 150,
+    "quantityLeft": 2,
+    "rating": 4.2,
+    "tags": [],
+    "flashSaleMinutes": 55
+  },
+  {
+    "id": 10,
+    "storeId": 3,
+    "name": "Lucky Sushi Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal10",
+    "originalPrice": 120,
+    "price": 40,
+    "quantityLeft": 2,
+    "rating": 4.9,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 11,
+    "storeId": 3,
+    "name": "End-of-day Sushi Bag",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal11",
+    "originalPrice": 420,
+    "price": 139,
+    "quantityLeft": 5,
+    "rating": 4.6,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 12,
+    "storeId": 3,
+    "name": "Chef's Sushi Bag",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal12",
+    "originalPrice": 120,
+    "price": 60,
+    "quantityLeft": 1,
+    "rating": 3.5,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 13,
+    "storeId": 3,
+    "name": "End-of-day Sushi Bag",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal13",
+    "originalPrice": 220,
+    "price": 110,
+    "quantityLeft": 1,
+    "rating": 4.3,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": 55
+  },
+  {
+    "id": 14,
+    "storeId": 4,
+    "name": "Last-call Deli Feast",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal14",
+    "originalPrice": 260,
+    "price": 86,
+    "quantityLeft": 3,
+    "rating": null,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 15,
+    "storeId": 4,
+    "name": "Rescue Deli Bag",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal15",
+    "originalPrice": 420,
+    "price": 168,
+    "quantityLeft": 4,
+    "rating": 5.0,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 16,
+    "storeId": 4,
+    "name": "Chef's Deli Set",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal16",
+    "originalPrice": 500,
+    "price": 165,
+    "quantityLeft": 2,
+    "rating": 3.7,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 17,
+    "storeId": 4,
+    "name": "Mystery Deli Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal17",
+    "originalPrice": 260,
+    "price": 78,
+    "quantityLeft": 2,
+    "rating": null,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 18,
+    "storeId": 5,
+    "name": "Last-call Bakery Feast",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal18",
+    "originalPrice": 260,
+    "price": 104,
+    "quantityLeft": 4,
+    "rating": 4.8,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 19,
+    "storeId": 5,
+    "name": "Surprise Bakery Bag",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal19",
+    "originalPrice": 150,
+    "price": 75,
+    "quantityLeft": 8,
+    "rating": null,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 20,
+    "storeId": 5,
+    "name": "Lucky Bakery Bag",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal20",
+    "originalPrice": 180,
+    "price": 90,
+    "quantityLeft": 1,
+    "rating": 4.5,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 21,
+    "storeId": 5,
+    "name": "Chef's Bakery Basket",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal21",
+    "originalPrice": 500,
+    "price": 150,
+    "quantityLeft": 1,
+    "rating": 4.8,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 22,
+    "storeId": 6,
+    "name": "Last-call Vegan Basket",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal22",
+    "originalPrice": 220,
+    "price": 73,
+    "quantityLeft": 5,
+    "rating": null,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 23,
+    "storeId": 6,
+    "name": "Surprise Vegan Bundle",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal23",
+    "originalPrice": 180,
+    "price": 59,
+    "quantityLeft": 8,
+    "rating": 4.7,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 24,
+    "storeId": 6,
+    "name": "Rescue Vegan Basket",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal24",
+    "originalPrice": 260,
+    "price": 86,
+    "quantityLeft": 8,
+    "rating": 3.7,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 25,
+    "storeId": 6,
+    "name": "End-of-day Vegan Feast",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal25",
+    "originalPrice": 300,
+    "price": 120,
+    "quantityLeft": 5,
+    "rating": 3.9,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 26,
+    "storeId": 7,
+    "name": "Last-call Street food Bag",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal26",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 2,
+    "rating": null,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 27,
+    "storeId": 7,
+    "name": "Last-call Street food Set",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal27",
+    "originalPrice": 120,
+    "price": 36,
+    "quantityLeft": 4,
+    "rating": 3.6,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 28,
+    "storeId": 7,
+    "name": "Surprise Street food Feast",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal28",
+    "originalPrice": 220,
+    "price": 88,
+    "quantityLeft": 3,
+    "rating": null,
+    "tags": [],
+    "flashSaleMinutes": 40
+  },
+  {
+    "id": 29,
+    "storeId": 7,
+    "name": "Mystery Street food Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal29",
+    "originalPrice": 300,
+    "price": 90,
+    "quantityLeft": 2,
+    "rating": 3.9,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 30,
+    "storeId": 8,
+    "name": "Chef's Cafe Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal30",
+    "originalPrice": 350,
+    "price": 175,
+    "quantityLeft": 4,
+    "rating": 3.9,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 31,
+    "storeId": 8,
+    "name": "Golden Cafe Feast",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal31",
+    "originalPrice": 350,
+    "price": 140,
+    "quantityLeft": 3,
+    "rating": 4.9,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 32,
+    "storeId": 8,
+    "name": "Last-call Cafe Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal32",
+    "originalPrice": 150,
+    "price": 60,
+    "quantityLeft": 5,
+    "rating": 4.7,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 33,
+    "storeId": 8,
+    "name": "Golden Cafe Box",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal33",
+    "originalPrice": 120,
+    "price": 36,
+    "quantityLeft": 3,
+    "rating": 4.3,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 34,
+    "storeId": 9,
+    "name": "Surprise Indian Box",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal34",
+    "originalPrice": 350,
+    "price": 116,
+    "quantityLeft": 2,
+    "rating": null,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": 75
+  },
+  {
+    "id": 35,
+    "storeId": 9,
+    "name": "Rescue Indian Crate",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal35",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 8,
+    "rating": 4.2,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 36,
+    "storeId": 9,
+    "name": "Lucky Indian Crate",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal36",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 5,
+    "rating": 4.1,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 37,
+    "storeId": 9,
+    "name": "Mystery Indian Crate",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal37",
+    "originalPrice": 260,
+    "price": 130,
+    "quantityLeft": 5,
+    "rating": 3.8,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 38,
+    "storeId": 9,
+    "name": "Lucky Indian Bundle",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal38",
+    "originalPrice": 500,
+    "price": 150,
+    "quantityLeft": 1,
+    "rating": 3.9,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": 15
+  },
+  {
+    "id": 39,
+    "storeId": 10,
+    "name": "Lucky Japanese Bag",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal39",
+    "originalPrice": 120,
+    "price": 40,
+    "quantityLeft": 3,
+    "rating": 4.9,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 40,
+    "storeId": 10,
+    "name": "End-of-day Japanese Crate",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal40",
+    "originalPrice": 350,
+    "price": 175,
+    "quantityLeft": 2,
+    "rating": 3.4,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 41,
+    "storeId": 10,
+    "name": "Chef's Japanese Bag",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal41",
+    "originalPrice": 350,
+    "price": 116,
+    "quantityLeft": 4,
+    "rating": 3.4,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 42,
+    "storeId": 10,
+    "name": "Mystery Japanese Basket",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal42",
+    "originalPrice": 180,
+    "price": 90,
+    "quantityLeft": 2,
+    "rating": 3.9,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 43,
+    "storeId": 10,
+    "name": "Rescue Japanese Crate",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal43",
+    "originalPrice": 260,
+    "price": 130,
+    "quantityLeft": 5,
+    "rating": 5.0,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 44,
+    "storeId": 11,
+    "name": "End-of-day Chinese Feast",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal44",
+    "originalPrice": 150,
+    "price": 45,
+    "quantityLeft": 4,
+    "rating": null,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 45,
+    "storeId": 11,
+    "name": "End-of-day Chinese Crate",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal45",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 8,
+    "rating": 4.4,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 46,
+    "storeId": 11,
+    "name": "Mystery Chinese Basket",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal46",
+    "originalPrice": 180,
+    "price": 72,
+    "quantityLeft": 5,
+    "rating": 4.3,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": 8
+  },
+  {
+    "id": 47,
+    "storeId": 11,
+    "name": "Rescue Chinese Bag",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal47",
+    "originalPrice": 150,
+    "price": 60,
+    "quantityLeft": 4,
+    "rating": 4.0,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 48,
+    "storeId": 12,
+    "name": "Rescue Healthy Basket",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal48",
+    "originalPrice": 120,
+    "price": 60,
+    "quantityLeft": 5,
+    "rating": 4.1,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 49,
+    "storeId": 12,
+    "name": "Mystery Healthy Crate",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal49",
+    "originalPrice": 350,
+    "price": 116,
+    "quantityLeft": 3,
+    "rating": 4.3,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 50,
+    "storeId": 12,
+    "name": "Golden Healthy Feast",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal50",
+    "originalPrice": 220,
+    "price": 66,
+    "quantityLeft": 4,
+    "rating": 4.0,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 51,
+    "storeId": 12,
+    "name": "End-of-day Healthy Set",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal51",
+    "originalPrice": 420,
+    "price": 168,
+    "quantityLeft": 2,
+    "rating": 4.4,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 52,
+    "storeId": 13,
+    "name": "Lucky Bakery Crate",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal52",
+    "originalPrice": 500,
+    "price": 165,
+    "quantityLeft": 8,
+    "rating": 4.2,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": 75
+  },
+  {
+    "id": 53,
+    "storeId": 13,
+    "name": "Lucky Bakery Feast",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal53",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 5,
+    "rating": 4.2,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": 15
+  },
+  {
+    "id": 54,
+    "storeId": 13,
+    "name": "Last-call Bakery Set",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal54",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 2,
+    "rating": 3.8,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 55,
+    "storeId": 14,
+    "name": "Golden Hawaiian Platter",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal55",
+    "originalPrice": 150,
+    "price": 50,
+    "quantityLeft": 8,
+    "rating": 3.9,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 56,
+    "storeId": 14,
+    "name": "Chef's Hawaiian Platter",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal56",
+    "originalPrice": 220,
+    "price": 88,
+    "quantityLeft": 5,
+    "rating": 3.8,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 57,
+    "storeId": 14,
+    "name": "Chef's Hawaiian Crate",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal57",
+    "originalPrice": 500,
+    "price": 200,
+    "quantityLeft": 8,
+    "rating": null,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 58,
+    "storeId": 14,
+    "name": "Chef's Hawaiian Bag",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal58",
+    "originalPrice": 420,
+    "price": 210,
+    "quantityLeft": 8,
+    "rating": 4.7,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 59,
+    "storeId": 15,
+    "name": "Mystery Thai Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal59",
+    "originalPrice": 150,
+    "price": 45,
+    "quantityLeft": 1,
+    "rating": 4.1,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 60,
+    "storeId": 15,
+    "name": "Golden Thai Platter",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal60",
+    "originalPrice": 220,
+    "price": 110,
+    "quantityLeft": 3,
+    "rating": 4.4,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 61,
+    "storeId": 15,
+    "name": "Mystery Thai Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal61",
+    "originalPrice": 150,
+    "price": 50,
+    "quantityLeft": 2,
+    "rating": null,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 62,
+    "storeId": 15,
+    "name": "Golden Thai Platter",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal62",
+    "originalPrice": 180,
+    "price": 54,
+    "quantityLeft": 2,
+    "rating": 3.9,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 63,
+    "storeId": 15,
+    "name": "End-of-day Thai Basket",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal63",
+    "originalPrice": 150,
+    "price": 50,
+    "quantityLeft": 4,
+    "rating": 3.6,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 64,
+    "storeId": 16,
+    "name": "Mystery Dessert Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal64",
+    "originalPrice": 150,
+    "price": 45,
+    "quantityLeft": 1,
+    "rating": 3.9,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 65,
+    "storeId": 16,
+    "name": "Surprise Dessert Basket",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal65",
+    "originalPrice": 260,
+    "price": 130,
+    "quantityLeft": 4,
+    "rating": 3.5,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 66,
+    "storeId": 16,
+    "name": "Chef's Dessert Crate",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal66",
+    "originalPrice": 120,
+    "price": 48,
+    "quantityLeft": 5,
+    "rating": 3.8,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 67,
+    "storeId": 16,
+    "name": "Golden Dessert Set",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal67",
+    "originalPrice": 350,
+    "price": 175,
+    "quantityLeft": 2,
+    "rating": 3.6,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 68,
+    "storeId": 17,
+    "name": "Lucky Deli Bag",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal68",
+    "originalPrice": 350,
+    "price": 175,
+    "quantityLeft": 1,
+    "rating": 3.9,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 69,
+    "storeId": 17,
+    "name": "Golden Deli Basket",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal69",
+    "originalPrice": 500,
+    "price": 150,
+    "quantityLeft": 2,
+    "rating": 4.4,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 70,
+    "storeId": 17,
+    "name": "Chef's Deli Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal70",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 5,
+    "rating": 3.4,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 71,
+    "storeId": 17,
+    "name": "Surprise Deli Basket",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal71",
+    "originalPrice": 220,
+    "price": 73,
+    "quantityLeft": 2,
+    "rating": 4.9,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 72,
+    "storeId": 18,
+    "name": "Mystery Thai Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal72",
+    "originalPrice": 180,
+    "price": 90,
+    "quantityLeft": 8,
+    "rating": 4.2,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 73,
+    "storeId": 18,
+    "name": "Chef's Thai Box",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal73",
+    "originalPrice": 500,
+    "price": 165,
+    "quantityLeft": 8,
+    "rating": 4.1,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 74,
+    "storeId": 18,
+    "name": "Mystery Thai Crate",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal74",
+    "originalPrice": 260,
+    "price": 78,
+    "quantityLeft": 3,
+    "rating": 4.0,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 75,
+    "storeId": 19,
+    "name": "End-of-day Pizza Basket",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal75",
+    "originalPrice": 420,
+    "price": 168,
+    "quantityLeft": 8,
+    "rating": 3.5,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 76,
+    "storeId": 19,
+    "name": "Chef's Pizza Crate",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal76",
+    "originalPrice": 350,
+    "price": 175,
+    "quantityLeft": 2,
+    "rating": 4.3,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 77,
+    "storeId": 19,
+    "name": "Golden Pizza Bag",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal77",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 3,
+    "rating": 5.0,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 78,
+    "storeId": 19,
+    "name": "Lucky Pizza Box",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal78",
+    "originalPrice": 420,
+    "price": 168,
+    "quantityLeft": 8,
+    "rating": 4.3,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 79,
+    "storeId": 19,
+    "name": "End-of-day Pizza Platter",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal79",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 5,
+    "rating": null,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 80,
+    "storeId": 20,
+    "name": "Surprise Fried chicken Bag",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal80",
+    "originalPrice": 420,
+    "price": 139,
+    "quantityLeft": 8,
+    "rating": null,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 81,
+    "storeId": 20,
+    "name": "Lucky Fried chicken Bundle",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal81",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 2,
+    "rating": null,
+    "tags": [],
+    "flashSaleMinutes": 55
+  },
+  {
+    "id": 82,
+    "storeId": 20,
+    "name": "Chef's Fried chicken Feast",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal82",
+    "originalPrice": 220,
+    "price": 110,
+    "quantityLeft": 5,
+    "rating": 3.8,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 83,
+    "storeId": 21,
+    "name": "Mystery Grill Basket",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal83",
+    "originalPrice": 260,
+    "price": 86,
+    "quantityLeft": 3,
+    "rating": 3.7,
+    "tags": [],
+    "flashSaleMinutes": 25
+  },
+  {
+    "id": 84,
+    "storeId": 21,
+    "name": "Last-call Grill Platter",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal84",
+    "originalPrice": 420,
+    "price": 126,
+    "quantityLeft": 1,
+    "rating": 4.5,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 85,
+    "storeId": 21,
+    "name": "Golden Grill Platter",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal85",
+    "originalPrice": 120,
+    "price": 36,
+    "quantityLeft": 4,
+    "rating": 3.8,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 86,
+    "storeId": 21,
+    "name": "Surprise Grill Platter",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal86",
+    "originalPrice": 260,
+    "price": 86,
+    "quantityLeft": 1,
+    "rating": 4.6,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 87,
+    "storeId": 21,
+    "name": "Chef's Grill Feast",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal87",
+    "originalPrice": 260,
+    "price": 104,
+    "quantityLeft": 8,
+    "rating": 5.0,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 88,
+    "storeId": 22,
+    "name": "Golden Juice Platter",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal88",
+    "originalPrice": 180,
+    "price": 72,
+    "quantityLeft": 8,
+    "rating": null,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 89,
+    "storeId": 22,
+    "name": "Lucky Juice Set",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal89",
+    "originalPrice": 180,
+    "price": 59,
+    "quantityLeft": 8,
+    "rating": 3.8,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 90,
+    "storeId": 22,
+    "name": "Mystery Juice Basket",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal90",
+    "originalPrice": 420,
+    "price": 168,
+    "quantityLeft": 1,
+    "rating": 4.2,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 91,
+    "storeId": 22,
+    "name": "End-of-day Juice Box",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal91",
+    "originalPrice": 500,
+    "price": 200,
+    "quantityLeft": 5,
+    "rating": 4.1,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 92,
+    "storeId": 23,
+    "name": "Rescue Chinese Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal92",
+    "originalPrice": 120,
+    "price": 48,
+    "quantityLeft": 4,
+    "rating": null,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 93,
+    "storeId": 23,
+    "name": "Chef's Chinese Basket",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal93",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 8,
+    "rating": 4.1,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 94,
+    "storeId": 23,
+    "name": "Golden Chinese Feast",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal94",
+    "originalPrice": 120,
+    "price": 48,
+    "quantityLeft": 1,
+    "rating": 4.0,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 95,
+    "storeId": 24,
+    "name": "Rescue Japanese Crate",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal95",
+    "originalPrice": 350,
+    "price": 140,
+    "quantityLeft": 5,
+    "rating": 4.4,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 96,
+    "storeId": 24,
+    "name": "Chef's Japanese Feast",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal96",
+    "originalPrice": 120,
+    "price": 48,
+    "quantityLeft": 8,
+    "rating": 3.7,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 97,
+    "storeId": 24,
+    "name": "Surprise Japanese Platter",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal97",
+    "originalPrice": 220,
+    "price": 88,
+    "quantityLeft": 2,
+    "rating": 4.7,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 98,
+    "storeId": 25,
+    "name": "End-of-day Breakfast Set",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal98",
+    "originalPrice": 180,
+    "price": 54,
+    "quantityLeft": 2,
+    "rating": 3.6,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 99,
+    "storeId": 25,
+    "name": "Golden Breakfast Crate",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal99",
+    "originalPrice": 500,
+    "price": 150,
+    "quantityLeft": 4,
+    "rating": 4.1,
+    "tags": [
+      "new"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 100,
+    "storeId": 25,
+    "name": "Surprise Breakfast Bag",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal100",
+    "originalPrice": 120,
+    "price": 48,
+    "quantityLeft": 8,
+    "rating": 4.5,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 101,
+    "storeId": 26,
+    "name": "Chef's Dessert Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal101",
+    "originalPrice": 150,
+    "price": 45,
+    "quantityLeft": 2,
+    "rating": 4.3,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 102,
+    "storeId": 26,
+    "name": "Lucky Dessert Box",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal102",
+    "originalPrice": 350,
+    "price": 140,
+    "quantityLeft": 8,
+    "rating": 4.8,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 103,
+    "storeId": 26,
+    "name": "End-of-day Dessert Basket",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal103",
+    "originalPrice": 220,
+    "price": 110,
+    "quantityLeft": 8,
+    "rating": 4.1,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 104,
+    "storeId": 26,
+    "name": "Mystery Dessert Set",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal104",
+    "originalPrice": 300,
+    "price": 150,
+    "quantityLeft": 5,
+    "rating": 3.5,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 105,
+    "storeId": 26,
+    "name": "Last-call Dessert Bundle",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal105",
+    "originalPrice": 150,
+    "price": 75,
+    "quantityLeft": 1,
+    "rating": 4.3,
+    "tags": [],
+    "flashSaleMinutes": 75
+  },
+  {
+    "id": 106,
+    "storeId": 27,
+    "name": "Lucky Seafood Bag",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal106",
+    "originalPrice": 350,
+    "price": 140,
+    "quantityLeft": 4,
+    "rating": 3.6,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 107,
+    "storeId": 27,
+    "name": "End-of-day Seafood Box",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal107",
+    "originalPrice": 220,
+    "price": 73,
+    "quantityLeft": 8,
+    "rating": 3.6,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 108,
+    "storeId": 27,
+    "name": "Surprise Seafood Platter",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal108",
+    "originalPrice": 220,
+    "price": 110,
+    "quantityLeft": 2,
+    "rating": 4.6,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 109,
+    "storeId": 28,
+    "name": "Lucky Bakery Box",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal109",
+    "originalPrice": 48,
+    "price": 16,
+    "quantityLeft": 5,
+    "rating": 3.4,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 110,
+    "storeId": 28,
+    "name": "Last-call Bakery Bundle",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal110",
+    "originalPrice": 62,
+    "price": 31,
+    "quantityLeft": 2,
+    "rating": 4.6,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 111,
+    "storeId": 28,
+    "name": "Chef's Bakery Bundle",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal111",
+    "originalPrice": 108,
+    "price": 32,
+    "quantityLeft": 1,
+    "rating": 3.8,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 112,
+    "storeId": 28,
+    "name": "End-of-day Bakery Box",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal112",
+    "originalPrice": 88,
+    "price": 44,
+    "quantityLeft": 3,
+    "rating": null,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 113,
+    "storeId": 29,
+    "name": "Surprise Chinese Bag",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal113",
+    "originalPrice": 108,
+    "price": 43,
+    "quantityLeft": 2,
+    "rating": 4.6,
+    "tags": [
+      "spicy"
+    ],
+    "flashSaleMinutes": 40
+  },
+  {
+    "id": 114,
+    "storeId": 29,
+    "name": "Rescue Chinese Bag",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal114",
+    "originalPrice": 78,
+    "price": 31,
+    "quantityLeft": 5,
+    "rating": 3.6,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 115,
+    "storeId": 29,
+    "name": "Last-call Chinese Box",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal115",
+    "originalPrice": 128,
+    "price": 42,
+    "quantityLeft": 8,
+    "rating": 4.1,
+    "tags": [
+      "vegan"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 116,
+    "storeId": 29,
+    "name": "Lucky Chinese Basket",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal116",
+    "originalPrice": 48,
+    "price": 19,
+    "quantityLeft": 2,
+    "rating": null,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 117,
+    "storeId": 29,
+    "name": "Golden Chinese Set",
+    "description": "A surprise selection of today's unsold items. Contents vary daily.",
+    "imageSeed": "deal117",
+    "originalPrice": 78,
+    "price": 26,
+    "quantityLeft": 3,
+    "rating": 3.8,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 118,
+    "storeId": 30,
+    "name": "Lucky Japanese Platter",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal118",
+    "originalPrice": 108,
+    "price": 32,
+    "quantityLeft": 2,
+    "rating": 3.7,
+    "tags": [
+      "gluten-free"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 119,
+    "storeId": 30,
+    "name": "End-of-day Japanese Set",
+    "description": "Assorted favourites at a fraction of the price. First come, first served.",
+    "imageSeed": "deal119",
+    "originalPrice": 128,
+    "price": 38,
+    "quantityLeft": 5,
+    "rating": 4.4,
+    "tags": [
+      "bestseller"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 120,
+    "storeId": 30,
+    "name": "Chef's Japanese Platter",
+    "description": "Freshly made this morning \u2014 rescued before closing time.",
+    "imageSeed": "deal120",
+    "originalPrice": 62,
+    "price": 19,
+    "quantityLeft": 2,
+    "rating": 4.6,
+    "tags": [
+      "halal"
+    ],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 121,
+    "storeId": 30,
+    "name": "Golden Japanese Crate",
+    "description": "Our best sellers that didn't sell out today. You save, we waste less.",
+    "imageSeed": "deal121",
+    "originalPrice": 62,
+    "price": 31,
+    "quantityLeft": 5,
+    "rating": 4.4,
+    "tags": [],
+    "flashSaleMinutes": null
+  },
+  {
+    "id": 122,
+    "storeId": 30,
+    "name": "Rescue Japanese Crate",
+    "description": "Whatever is left in the display counter, packed with care.",
+    "imageSeed": "deal122",
+    "originalPrice": 62,
+    "price": 31,
+    "quantityLeft": 5,
+    "rating": 3.8,
+    "tags": [
+      "vegetarian"
+    ],
+    "flashSaleMinutes": null
+  }
+]

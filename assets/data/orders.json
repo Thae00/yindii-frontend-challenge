@@ -1,0 +1,74 @@
+[
+  {
+    "id": 9001,
+    "dealId": 3,
+    "dealName": "Rescue Sushi Box",
+    "storeName": "Chao Phraya Sushi",
+    "imageSeed": "deal3",
+    "status": "READY",
+    "quantity": 1,
+    "total": 99,
+    "currencyCode": "THB",
+    "pickupInMinutes": 18
+  },
+  {
+    "id": 9002,
+    "dealId": 11,
+    "dealName": "Surprise Bakery Bundle",
+    "storeName": "Sunrise Bakehouse",
+    "imageSeed": "deal11",
+    "status": "CONFIRMED",
+    "quantity": 2,
+    "total": 144,
+    "currencyCode": "THB",
+    "pickupInMinutes": 47
+  },
+  {
+    "id": 9003,
+    "dealId": 27,
+    "dealName": "Last-call Vegan Set",
+    "storeName": "Lotus Vegan Bowls",
+    "imageSeed": "deal27",
+    "status": "CONFIRMED",
+    "quantity": 1,
+    "total": 110,
+    "currencyCode": "THB",
+    "pickupInMinutes": 132
+  },
+  {
+    "id": 9004,
+    "dealId": 40,
+    "dealName": "Chef's Thai Feast",
+    "storeName": "Old Town Khao Gaeng",
+    "imageSeed": "deal40",
+    "status": "COMPLETED",
+    "quantity": 1,
+    "total": 90,
+    "currencyCode": "THB",
+    "pickupInMinutes": -1400
+  },
+  {
+    "id": 9005,
+    "dealId": 55,
+    "dealName": "Mystery Dessert Crate",
+    "storeName": "Mango Sticky Lab",
+    "imageSeed": "deal55",
+    "status": "COMPLETED",
+    "quantity": 3,
+    "total": 216,
+    "currencyCode": "THB",
+    "pickupInMinutes": -4200
+  },
+  {
+    "id": 9006,
+    "dealId": 88,
+    "dealName": "Golden Bakery Basket",
+    "storeName": "Central Pier Bakes",
+    "imageSeed": "deal88",
+    "status": "CANCELLED",
+    "quantity": 1,
+    "total": 26,
+    "currencyCode": "HKD",
+    "pickupInMinutes": -900
+  }
+]
