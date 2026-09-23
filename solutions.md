@@ -72,3 +72,40 @@ regardless of machine.
   timeout" UI state if the fake API's simulated latency were ever extended
   far beyond current bounds — out of scope since the ticket is specifically
   about correctness of displayed results, not latency UX.
+
+### RES-102 · Crash after leaving My orders
+
+- **Root cause:** `_PickupCountdownState` (in `pickup_countdown.dart`) started
+  a `Timer.periodic(const Duration(seconds: 1), ...)` in `initState()` but
+  never stored a reference to it and never overrode `dispose()`. When the
+  user navigated back from **My orders**, the widget (and its `State`) was
+  disposed, but the timer kept firing every second regardless. On its next
+  tick, the callback called `setState(() {})` on a `State` that no longer
+  had a mounted widget, throwing `setState() called after dispose()` —
+  within a couple of seconds, matching the reported symptom. This only
+  showed up for orders with an upcoming pickup because `PickupCountdown` is
+  only rendered when `showCountdown: true` (active orders); past orders show
+  a plain status `Text` instead and never start a timer.
+
+- **Fix:** Store the timer in a `Timer? _timer` field, and override
+  `dispose()` to call `_timer?.cancel()` before `super.dispose()`. Also
+  added a `mounted` check inside the timer callback as defense-in-depth, in
+  case a tick and disposal ever race on the same frame.
+
+- **Why this fix (and what alternative was rejected):** This is the standard
+  fix for any periodic `Timer` owned by a `StatefulWidget` — cancel it in
+  `dispose()`, symmetric with where it's created in `initState()`. Considered
+  moving the countdown state into the `OrdersController` (a `GetxController`)
+  instead, driven by `onClose()`, but rejected it: a `GetxController` here is
+  scoped to the whole orders screen/list, not to one tile, so a single timer
+  per controller updating every order row would still need per-row diffing
+  logic to avoid rebuilding the entire list every second — more complex for
+  no real benefit when each tile already owns its own lightweight timer.
+
+- **Edge cases considered / not handled:** Rapid navigate-away-and-back is
+  covered since each new `PickupCountdown` instance gets its own fresh timer
+  independent of any prior instance's disposal. Not handled: no attempt to
+  pause/resume the timer on app lifecycle changes (e.g. backgrounding) since
+  a `setState` call while the app is backgrounded doesn't crash and the
+  displayed countdown will simply catch up to the correct value on the next
+  visible tick — not worth the added complexity for this ticket's scope.

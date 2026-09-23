@@ -15,12 +15,22 @@ class PickupCountdown extends StatefulWidget {
 }
 
 class _PickupCountdownState extends State<PickupCountdown> {
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
-    Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {});
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {});
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -43,11 +53,13 @@ class _PickupCountdownState extends State<PickupCountdown> {
         const Icon(Icons.timer_outlined,
             size: 15, color: AppConfig.primaryGreen),
         const SizedBox(width: 4),
-        Text(text,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppConfig.primaryGreen)),
+        Text(
+          text,
+          style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppConfig.primaryGreen),
+        ),
       ],
     );
   }
