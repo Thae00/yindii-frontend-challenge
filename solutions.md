@@ -338,3 +338,49 @@ regardless of machine.
   timezone while the app is running (e.g. mid-flight) — `DateTime.now()`
   and `.toLocal()` both read the device's current timezone setting live, so
   this should self-correct on the next rebuild, but it wasn't verified.
+
+### RES-107 · Deep link opens to a crash
+
+- **Root cause:** `DealDetailsController.onInit()` did
+  `deal = Get.arguments as DealModel;`, assuming a full `DealModel` object is
+  always passed as the route's `arguments`. That holds for in-app navigation
+  (`deal_card.dart` and `flash_deals_section.dart` both call
+  `Get.toNamed(..., arguments: deal)`), but a deep link
+  (`rescu://open/deal?id=42&source=push`) only carries `id` as a query
+  parameter — `_showDeepLinkDialog`'s `Get.toNamed(route)` call passes no
+  `arguments` at all. So `Get.arguments` is `null` for a deep link open, and
+  the cast throws `type 'Null' is not a subtype of type 'DealModel'` —
+  matching the reported crash exactly. Opening from the home feed worked
+  fine because that path always supplies the full object.
+
+- **Fix:** `onInit` now checks whether `Get.arguments` is a `DealModel`; if
+  so it's used directly (fast path, no fetch, same as before for in-app
+  navigation). If not, it parses `Get.parameters['id']` and calls
+  `dealRepo.fetchById(id)` to fetch the deal by id — the same pattern the
+  fake API already supports and that `DealDetailsController` was already
+  using for `_recheckAvailability()`. Since this fetch is async, `deal`
+  became a nullable `Rxn<DealModel>` with `isLoading`/`loadFailed` flags, and
+  `DealDetailsScreen`'s body/bottomSheet are now wrapped in `Obx` to show a
+  loading spinner while fetching, an error view with a "Go back" action if
+  the id is missing/invalid or the fetch fails, and the full deal page once
+  loaded — satisfying the ticket's requirement that the link land on "a
+  fully working deal page", not a fallback/error screen, for a valid id.
+
+- **Why this fix (and what alternative was rejected):** Considered always
+  ignoring `Get.arguments` and always fetching by id (simpler code, one
+  path only). Rejected because that would add an unnecessary network
+  round-trip and a loading flash for the common in-app-navigation case,
+  where the full deal is already available locally — the dual-path
+  approach keeps the fast path fast and only pays the fetch cost when the
+  full object genuinely isn't available (deep link entry).
+
+- **Edge cases considered / not handled:** An invalid or missing `id` query
+  param (e.g. malformed deep link) shows the error view with a "Go back"
+  button rather than crashing. While restructuring `onInit`'s worker setup
+  for the async flow, also added the missing `onClose` override to dispose
+  the `ever(cartService.itemCount, ...)` worker (the RES-103 leak) in this
+  same file, since it was touched anyway — noted here since it's a second,
+  related fix riding along in the same commit. Not handled: no retry
+  button distinguishing "invalid id" from "network/fetch error" — both
+  currently show the same generic error view and only offer "Go back",
+  not a retry action.

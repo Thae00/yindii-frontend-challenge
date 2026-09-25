@@ -10,9 +10,27 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
 
   @override
   Widget build(BuildContext context) {
-    final deal = controller.deal;
     return Scaffold(
-      body: CustomScrollView(
+      body: Obx(() {
+        if (controller.isLoading.value) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final deal = controller.dealOrNull;
+        if (controller.loadFailed.value || deal == null) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, size: 48, color: Colors.grey),
+                const SizedBox(height: 12),
+                const Text("Couldn't load this deal."),
+                const SizedBox(height: 12),
+                TextButton(onPressed: Get.back, child: const Text('Go back')),
+              ],
+            ),
+          );
+        }
+        return CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 240,
@@ -124,8 +142,13 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
             ),
           ),
         ],
-      ),
-      bottomSheet: Container(
+        );
+      }),
+      bottomSheet: Obx(() {
+        if (controller.isLoading.value || controller.dealOrNull == null) {
+          return const SizedBox.shrink();
+        }
+        return Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         color: Colors.white,
         child: SizedBox(
@@ -136,7 +159,8 @@ class DealDetailsScreen extends GetView<DealDetailsController> {
             label: const Text('Add to bag'),
           ),
         ),
-      ),
+        );
+      }),
     );
   }
 }
