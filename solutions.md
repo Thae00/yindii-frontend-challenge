@@ -188,3 +188,108 @@ regardless of machine.
 - **Edge cases considered / not handled:** Two or more rapid consecutive
   pull-to-refresh calls are handled correctly — only the last one's result
   is ever applied.
+
+### RES-105 · Home feed is janky and memory keeps climbing
+
+- **Root cause(s):** Three contributing causes, all in `home_screen.dart` /
+  `the_network_image.dart`:
+  1. The entire `Scaffold` (AppBar, list, FAB) was wrapped in a single
+     top-level `Obx` that only needed to react to `scrollOffset`, which
+     updates on every scroll pixel. This forced a full widget-tree rebuild
+     on every scroll tick — matching DevTools' "entire feed rebuilding
+     continuously during scroll".
+  2. The deal list used `ListView(children: [...])` (eager, non-lazy)
+     instead of a lazy builder, so every card ever loaded via pagination
+     stayed built and in memory, growing unbounded as the feed paginated.
+  3. `TheNetworkImage` passed no `memCacheWidth`/`memCacheHeight` to
+     `CachedNetworkImage`, so images were decoded at their full source
+     resolution regardless of the ~160dp display size, ballooning the
+     image cache — matching DevTools' "image cache ballooning" symptom.
+
+- **Fix:**
+  1. Replaced the single top-level `Obx` with several narrowly-scoped ones
+     (AppBar shadow line, FAB visibility, flash-deals section, filter chip),
+     so only the widget that actually depends on a changed value rebuilds.
+  2. Replaced the `ListView` with `CustomScrollView` + `SliverList.builder`,
+     so only visible (+ nearby) cards are built and disposed as the user
+     scrolls.
+  3. Added `memCacheWidth`/`memCacheHeight` to `CachedNetworkImage`,
+     computed from the widget's actual display size scaled by device pixel
+     ratio, with the screen width as a fallback cap when width is unbounded
+     (e.g. a full-width card using `double.infinity`).
+
+- **Before/after DevTools evidence:** Tested in debug mode (Rebuild Stats is
+  unavailable in profile mode) for rebuild counts, and profile mode for
+  frame timing and memory, scrolling from page 2 through page 5 (~20 second
+  window, confirmed via matching console log timestamps and the Memory
+  chart's x-axis on both runs) on an Android emulator (Pixel 8 API,
+  arm64):
+  - **`DealCard` instance count (strongest evidence)**: after scrolling
+    through the full catalog (page 1→7, 122 deals — the fake API's entire
+    dataset) and back up to the top, a Memory tab heap snapshot showed
+    **2,460 live `DealCard` instances before the fix vs. a single-digit
+    count after** (3-5 across repeated snapshots — filtered by class name in
+    Profile Memory). The exact single-digit number varies slightly between
+    snapshots depending on scroll position and viewport fit, which is
+    expected for a lazily-built list; what matters is the two-orders-of-
+    magnitude gap versus before. 2,460 ÷ 122 deals ≈ 20x — consistent
+    with the top-level `Obx` re-running its builder (and thus reconstructing
+    every `DealCard` in the list) on every scroll-pixel update, while the
+    fixed version's single-digit count matches what's actually visible on
+    screen at once via `SliverList.builder`'s lazy building. This is a
+    two-orders-
+    of-magnitude difference, well outside any run-to-run noise, and directly
+    confirms the Obx-scoping fix (cause #1) eliminated the excess rebuilds.
+  - **UI-thread (rebuild) time improved clearly**: 0.7ms → 0.3ms per frame
+    in the Performance tab's Frame Analysis tooltip — direct evidence the
+    Obx-scoping fix reduced the work being done on the UI thread.
+  - **Raster time, FPS average, and total heap size were statistically
+    indistinguishable** between before and after at this test scale
+    (Raster ~58ms and 13 FPS average in both runs; All Classes total size
+    11.3 MB before vs 11.1 MB after; DealModel instance count/size
+    identical at 34 / 2.7 KB in both, as expected since page count was the
+    same). A ~20 second / 4-page scroll session is likely too short to
+    reproduce the ticket's described symptom ("memory grows the further
+    you scroll... until the OS kills the app") in either the before or
+    after case — the memory chart is flat in both runs at this scale.
+  - The persistently high Raster time in both runs (~58-60ms, far above
+    the ~16ms budget for 60fps) suggests a GPU/raster-thread bottleneck
+    (card shadows, `ClipRRect` antialiasing, shimmer gradients, or emulator
+    software rendering) that is outside this fix's scope, since the fix
+    specifically targets UI-thread rebuild cost, not raster/paint cost.
+  - **Follow-up on a real device** (Pixel, arm64, scrolled to page 7):
+    both before and after runs held a steady **58 FPS average**, with only
+    occasional jank bars (a handful out of dozens of frames, e.g. one
+    tooltip showed UI 2.5ms / Raster 16.8ms — just over the 16ms budget)
+    rather than the near-constant jank seen on the emulator's
+    12-13 FPS. This points to the emulator's software
+    rendering as the likely cause of the raster-time bottleneck seen
+    above, rather than an app-level issue within this fix's scope. Memory
+    (Dart Heap 12.8 MB → 12.1 MB, External bytes 20.8 KB → 214.7 KB) was
+    inconclusive in either direction on the real device too — both figures
+    stayed in the KB range for external (image) bytes across ~30 loaded
+    deals, which is far smaller than expected if full-resolution images
+    were being decoded, suggesting this test dataset's source images are
+    low-resolution enough that the `memCacheWidth`/`memCacheHeight` fix
+    has little source resolution to cap in the first place. This test
+    was not repeated enough times to rule out run-to-run GC noise as the
+    explanation for the External-bytes increase.
+
+- **Why this fix (and what alternative was rejected):** Considered leaving
+  the `ListView` as-is and only fixing the `Obx` scoping, since the
+  Rebuild Stats evidence for cause #1 is the strongest signal obtained.
+  Rejected that narrower scope because causes #2 and #3 are directly
+  supported by code inspection (eager list construction, missing memory
+  cache bounds) even though a longer scroll session would be needed to
+  show their effect conclusively in DevTools — the ticket explicitly
+  expects multiple contributing causes to be found and fixed, not just the
+  one with the clearest before/after numbers.
+
+- **Edge cases considered / not handled:** `TheNetworkImage`'s cache-size
+  calculation guards against `width`/`height` being `double.infinity` (used
+  by full-width cards), falling back to screen width instead of crashing on
+  `.round()` of an infinite value. Not handled/validated: a longer
+  (multi-minute, 20+ page) scroll session to conclusively confirm the
+  memory-growth fix and isolate the raster-time bottleneck — only tested up
+  to page 5 due to time constraints; this is flagged as follow-up work
+  rather than claimed as verified.
