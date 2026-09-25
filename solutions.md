@@ -150,3 +150,41 @@ regardless of machine.
   same deal id (e.g. via two navigation stacks) — out of scope since the
   app's navigation doesn't currently allow that, and it's an existing
   constraint unrelated to this leak.
+
+### RES-104 · Duplicate deals in the home feed
+
+- **Root cause:** `refreshDeals()` and `loadMore()` in `HomeController` both
+  mutate shared state (`deals`, `_page`, `_totalPages`) with no coordination
+  between them. `_isFetchingMore` only guards `loadMore()` against itself —
+  it has no effect on `refreshDeals()`. If the user scrolls to the bottom
+  (triggering `loadMore()`, which increments `_page` and awaits page N) and
+  then quickly pulls to refresh before that finishes, `refreshDeals()` resets
+  `_page` to 1 and replaces the list (`deals.assignAll(...)`). When the
+  earlier, now-stale `loadMore()` request resolves afterward, it blindly
+  appends its (now out-of-sync) page onto the just-refreshed list
+  (`deals.addAll(...)`), producing duplicated cards or more items than the
+  catalog contains — intermittently, since it depends on the two requests'
+  latencies overlapping.
+
+- **Fix:** Added an `int _epoch` counter. `refreshDeals()` increments it and
+  captures its own `myEpoch`; if `_epoch` has changed by the time its
+  response arrives (a newer refresh started), it discards its own result
+  instead of applying it. `loadMore()` captures the epoch value in effect
+  when it starts; if the epoch has changed by the time its response arrives
+  (a refresh happened while it was in flight), it discards the page instead
+  of appending it. This makes only the most recently *started* refresh's
+  result ever land, and prevents any in-flight `loadMore()` page from being
+  appended on top of a list a newer refresh has since replaced — regardless
+  of which response arrives first.
+
+- **Why this fix (and what alternative was rejected):** Considered simply
+  disabling pull-to-refresh while `_isFetchingMore` is true (block the
+  gesture instead of guarding the race). Rejected because it changes user-
+  facing behavior for a case the ticket doesn't ask to prevent — the user
+  should be able to refresh at any time; the fix should make that safe, not
+  restrict it. The epoch-guard approach fixes the race without taking away
+  the ability to refresh while a page is loading.
+
+- **Edge cases considered / not handled:** Two or more rapid consecutive
+  pull-to-refresh calls are handled correctly — only the last one's result
+  is ever applied.

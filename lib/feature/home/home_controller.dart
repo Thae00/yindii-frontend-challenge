@@ -23,6 +23,7 @@ class HomeController extends GetxController {
   int _page = 1;
   int _totalPages = 1;
   bool _isFetchingMore = false;
+  int _epoch = 0;
 
   bool get hasMore => _page < _totalPages;
 
@@ -56,8 +57,10 @@ class HomeController extends GetxController {
   }
 
   Future<void> refreshDeals() async {
+    final myEpoch = ++_epoch;
     _page = 1;
     final res = await dealRepo.fetchDeals(page: 1);
+    if (myEpoch != _epoch) return;
     _totalPages = res.totalPages;
     deals.assignAll(res.items);
     refreshController.refreshCompleted();
@@ -69,10 +72,19 @@ class HomeController extends GetxController {
       refreshController.loadNoData();
       return;
     }
+    final myEpoch = _epoch;
     _isFetchingMore = true;
     _page++;
     try {
       final res = await dealRepo.fetchDeals(page: _page);
+      if (myEpoch != _epoch) {
+        // A refresh happened while this page was in flight — this page's
+        // items no longer line up with the list a newer refresh replaced,
+        // so discard them instead of appending stale/duplicate items.
+        _isFetchingMore = false;
+        refreshController.loadComplete();
+        return;
+      }
       _totalPages = res.totalPages;
       deals.addAll(res.items);
     } catch (e) {
