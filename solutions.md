@@ -293,3 +293,48 @@ regardless of machine.
   memory-growth fix and isolate the raster-time bottleneck — only tested up
   to page 5 due to time constraints; this is flagged as follow-up work
   rather than claimed as verified.
+
+### RES-106 · Wrong pickup times; "Pickup today" filter misses deals
+
+- **Root cause:** `PickupWindowModel` parses `start`/`end` from the API's
+  ISO-8601 UTC strings via `DateTime.parse()`, which correctly produces UTC
+  `DateTime` objects — but two getters then used those values without ever
+  converting to local time:
+  1. `label` formatted `start`/`end` directly with `DateFormat('HH:mm')`,
+     which reads the `DateTime`'s raw hour/minute fields. For a UTC
+     `DateTime`, those are the UTC hour/minute, not local — so a bakery
+     open 06:00–09:30 local (Bangkok, UTC+7) displayed as "23:00 – 02:30"
+     (the UTC equivalent), matching the reported symptom exactly.
+  2. `isToday` compared `start.day` (the UTC day-of-month) directly against
+     `DateTime.now().day` (the local device's day-of-month), with no month/
+     year check either. Near local midnight, the UTC day and local day can
+     differ by one — a deal whose local pickup is "today" can have a UTC
+     `start.day` that reads as tomorrow or yesterday, causing it to be
+     wrongly excluded from the "Pickup today" filter.
+  `isOpenNow` was unaffected, since `DateTime.isAfter`/`isBefore` compare
+  absolute instants regardless of which timezone the values are printed in.
+
+- **Fix:** Call `.toLocal()` on `start`/`end` before reading any field from
+  them. `label` now formats the local-converted times. `isToday` now
+  converts `start` to local first, then compares year, month, and day all
+  three against `DateTime.now()` (not just day-of-month), fixing both the
+  midnight-boundary issue and the latent month/year gap in the original
+  comparison.
+
+- **Why this fix (and what alternative was rejected):** Considered having
+  the fake API send local-time strings instead of UTC to sidestep the
+  conversion entirely. Rejected because `fake_api_service.dart` and
+  `assets/data/*` are explicitly off-limits per PROBLEM.md, and because
+  "the backend sends UTC, the client displays local" is the correct,
+  general pattern for a real API anyway — the bug was in the client's
+  handling, not the API's data format (PROBLEM.md's own note that "the
+  backend team insists their data is correct" supports this).
+
+- **Edge cases considered / not handled:** The `isToday` fix's three-field
+  comparison also fixes the latent bug where a deal on the same day-of-month
+  in a different month or year would have incorrectly matched under the
+  original single-field comparison, even though that wasn't the reported
+  symptom. Not handled: no explicit test for a user changing their device's
+  timezone while the app is running (e.g. mid-flight) — `DateTime.now()`
+  and `.toLocal()` both read the device's current timezone setting live, so
+  this should self-correct on the next rebuild, but it wasn't verified.
