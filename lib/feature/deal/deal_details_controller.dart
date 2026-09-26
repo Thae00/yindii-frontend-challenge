@@ -21,6 +21,7 @@ class DealDetailsController extends GetxController {
   DealModel? get dealOrNull => _deal.value;
   final isLoading = true.obs;
   final loadFailed = false.obs;
+  final isFlashExpired = false.obs;
 
   final _quantityLeft = RxnInt();
   int? get quantityLeft => _quantityLeft.value;
@@ -57,6 +58,8 @@ class DealDetailsController extends GetxController {
       }
     }
     _quantityLeft.value = _deal.value!.quantityLeft;
+    final endsAt = _deal.value!.flashSaleEndsAt;
+    isFlashExpired.value = endsAt != null && !endsAt.isAfter(DateTime.now());
     analytics.logEvent('deal_details_view', {
       'deal_id': _deal.value!.id,
       'source': Get.parameters['source'] ?? 'unknown',
@@ -75,9 +78,25 @@ class DealDetailsController extends GetxController {
     _quantityLeft.value = fresh.quantityLeft;
   }
 
-  void addToCart() {
+  void handleFlashExpired() {
+    if (isFlashExpired.value) return;
+    isFlashExpired.value = true;
     final deal = _deal.value;
     if (deal == null) return;
+    final wasInCart = cartService.items.any((i) => i.deal.id == deal.id);
+    if (wasInCart) {
+      cartService.remove(deal.id);
+      Get.snackbar(
+        'Removed from bag',
+        '${deal.name} is no longer available — the flash sale ended.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  void addToCart() {
+    final deal = _deal.value;
+    if (deal == null || isFlashExpired.value) return;
     cartService.add(deal);
     Get.snackbar(
       'Added to bag',

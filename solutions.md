@@ -384,3 +384,55 @@ regardless of machine.
   button distinguishing "invalid id" from "network/fetch error" — both
   currently show the same generic error view and only offer "Go back",
   not a retry action.
+
+---
+
+## Part B — Features
+
+### F-1 · Live flash-sale countdowns
+
+- **Approach:** Created a reusable `FlashCountdownBadge` (StatefulWidget)
+  that owns a single `Timer.periodic(1s)`, cancelled in `dispose()` (the
+  RES-102 lesson applied deliberately here), and renders `mm:ss` /
+  `h:mm:ss`. It calls `onExpired` exactly once, deferred via
+  `addPostFrameCallback`, when the countdown reaches zero. This one widget
+  is reused in all three required places: the flash rail
+  (`flash_deals_section.dart`), home feed cards (`deal_card.dart`, replacing
+  the old static "FLASH SALE" badge), and the deal details screen. Each
+  card/rail-item that shows a flash deal was converted to (or already
+  extracted into) its own small `StatefulWidget` holding an `_expired`
+  bool, so that on expiry the card greys out (`Opacity` + disabled `onTap`/
+  `IgnorePointer`-equivalent), shows "Unavailable"/"Expired", and — if the
+  deal was already in the cart — removes it via `CartService.remove()` and
+  shows a snackbar ("Removed from bag — the flash sale ended"). The details
+  screen's "Add to bag" button disables and relabels to "No longer
+  available" the same way, via an `isFlashExpired` observable on
+  `DealDetailsController`.
+
+- **Performance notes (100+ visible countdowns, scoped rebuilds):** Verified
+  with DevTools Rebuild Stats (debug mode) over a 10-second window with the
+  home feed static (not scrolling): `FlashCountdownBadge` and its internal
+  `Container`/`Text` were the only widgets rebuilding (Overall counts in
+  the 16-80 range across the two flash-rail/feed instances present), while
+  `DealCard`, `Card`, `ListView`/`SliverList`, and `Scaffold` showed zero
+  rebuilds in the same window — confirming the per-second tick only
+  rebuilds the badge itself, never the surrounding card or list. The FPS
+  reading during that same capture (16 FPS) is not meaningful on its own,
+  since the Rebuild Stats instrumentation itself adds overhead to frame
+  timing (the same caveat noted for RES-105) — the rebuild-count table, not
+  the FPS number, is the relevant evidence here.
+
+- **Edge cases considered / not handled:** A deal whose `flashSaleEndsAt`
+  is already in the past when the card first builds starts in the expired
+  state immediately (no full countdown-then-expire flash), computed once in
+  `initState`/the wrapper's field initializer rather than waiting for the
+  first tick. Cart removal only fires if the specific expired deal is
+  actually present in the cart, so unrelated cart items are never touched
+  (confirmed manually: two ordinary items stayed in the bag after a third,
+  flash-sale item expired and was removed). Not handled: cart contents are
+  in-memory only (`CartService` "lives for the whole session," unrelated to
+  this feature), so a hot **restart** (not reload) clears the whole cart —
+  this is pre-existing app behavior, not something F-1 introduced or needs
+  to fix, but worth noting since it can look like an expiry-removal bug
+  during manual testing if a hot restart happens between adding an item and
+  it expiring.

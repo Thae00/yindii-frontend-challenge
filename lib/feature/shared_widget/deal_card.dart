@@ -4,28 +4,59 @@ import 'package:get/get.dart';
 import '../../app_config.dart';
 import '../../model/deal_model.dart';
 import '../../routes/routes.dart';
+import '../../service/cart_service.dart';
+import 'flash_countdown_badge.dart';
 import 'the_network_image.dart';
 
 /// Deal card used in the home feed and search results.
-class DealCard extends StatelessWidget {
+class DealCard extends StatefulWidget {
   final DealModel deal;
   final String source;
 
   const DealCard({super.key, required this.deal, this.source = 'home'});
 
   @override
+  State<DealCard> createState() => _DealCardState();
+}
+
+class _DealCardState extends State<DealCard> {
+  late bool _expired = widget.deal.flashSaleEndsAt != null &&
+      !widget.deal.flashSaleEndsAt!.isAfter(DateTime.now());
+
+  void _handleExpired() {
+    if (_expired || !mounted) return;
+    setState(() => _expired = true);
+    final cart = Get.find<CartService>();
+    final wasInCart =
+        cart.items.any((i) => i.deal.id == widget.deal.id);
+    if (wasInCart) {
+      cart.remove(widget.deal.id);
+      Get.snackbar(
+        'Removed from bag',
+        '${widget.deal.name} is no longer available — the flash sale ended.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final deal = widget.deal;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       clipBehavior: Clip.antiAlias,
       color: Colors.white,
       elevation: 0.5,
       child: InkWell(
-        onTap: () => Get.toNamed(
-          Routes.dealRoute(deal.id, source: source),
-          arguments: deal,
-        ),
-        child: Column(
+        onTap: _expired
+            ? null
+            : () => Get.toNamed(
+                  Routes.dealRoute(deal.id, source: widget.source),
+                  arguments: deal,
+                ),
+        child: Opacity(
+          opacity: _expired ? 0.5 : 1,
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
@@ -35,19 +66,14 @@ class DealCard extends StatelessWidget {
                   Positioned(
                     top: 8,
                     left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade600,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        'FLASH SALE',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold),
-                      ),
+                    child: FlashCountdownBadge(
+                      endsAt: deal.flashSaleEndsAt!,
+                      onExpired: _handleExpired,
+                      activeColor: Colors.red.shade600,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                 Positioned(
@@ -60,7 +86,7 @@ class DealCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      '${deal.quantityLeft} left',
+                      _expired ? 'Unavailable' : '${deal.quantityLeft} left',
                       style: const TextStyle(color: Colors.white, fontSize: 11),
                     ),
                   ),
@@ -135,6 +161,7 @@ class DealCard extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
