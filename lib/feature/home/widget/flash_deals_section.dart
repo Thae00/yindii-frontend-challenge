@@ -6,6 +6,7 @@ import '../../../model/deal_model.dart';
 import '../../../routes/routes.dart';
 import '../../../service/cart_service.dart';
 import '../../shared_widget/flash_countdown_badge.dart';
+import '../../shared_widget/impression_detector.dart';
 import '../../shared_widget/the_network_image.dart';
 
 /// Horizontal flash-sale rail with a live per-deal countdown.
@@ -36,7 +37,8 @@ class FlashDealsSection extends StatelessWidget {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             itemCount: deals.length,
-            itemBuilder: (context, index) => _FlashRailCard(deal: deals[index]),
+            itemBuilder: (context, index) =>
+                _FlashRailCard(deal: deals[index], position: index),
           ),
         ),
       ],
@@ -46,8 +48,9 @@ class FlashDealsSection extends StatelessWidget {
 
 class _FlashRailCard extends StatefulWidget {
   final DealModel deal;
+  final int position;
 
-  const _FlashRailCard({required this.deal});
+  const _FlashRailCard({required this.deal, required this.position});
 
   @override
   State<_FlashRailCard> createState() => _FlashRailCardState();
@@ -75,7 +78,11 @@ class _FlashRailCardState extends State<_FlashRailCard> {
   @override
   Widget build(BuildContext context) {
     final deal = widget.deal;
-    return SizedBox(
+    return ImpressionDetector(
+      dealId: deal.id,
+      source: 'flash_rail',
+      position: widget.position,
+      child: SizedBox(
       width: 200,
       child: Card(
         color: Colors.white,
@@ -134,6 +141,7 @@ class _FlashRailCardState extends State<_FlashRailCard> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

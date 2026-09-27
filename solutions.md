@@ -436,3 +436,213 @@ regardless of machine.
   to fix, but worth noting since it can look like an expiry-removal bug
   during manual testing if a hot restart happens between adding an item and
   it expiring.
+
+### F-2 · Impression tracking
+
+- **Approach:** Split the feature into two layers with different concerns
+  and different timing requirements, rather than one widget that does both:
+  - `ImpressionDetector` (new `StatefulWidget`, wraps a card in each list)
+    owns *"has this card instance been ≥50% visible for one continuous
+    second"*. It wraps `VisibilityDetector` (already in `pubspec.yaml`).
+    On `onVisibilityChanged`, if `visibleFraction >= 0.5` it starts a 1s
+    `Timer` (only if one isn't already running); if the fraction drops
+    below 0.5 the timer is cancelled and a fresh continuous second is
+    required next time. When the timer completes it calls
+    `ImpressionTrackingService.recordImpression(...)` exactly once, then
+    stops reacting (a `_fired` flag short-circuits further callbacks).
+  - `ImpressionTrackingService` (new `GetxService`, permanent) owns the two
+    things that must be correct *globally*, not per-widget: session-level
+    dedupe via a `Set<int>` of deal ids already recorded (`_seenDealIds`,
+    "at most once per deal per session, across all screens" — a `Set.add`
+    returning `false` is a one-line no-op for every repeat), and batching
+    delivery to `FakeApiService.sendAnalyticsBatch`, flushed at 10
+    accumulated events or 15s since the first unsent event, whichever comes
+    first (a `Timer` started only when the batch goes from empty to
+    non-empty, not re-armed on every add — otherwise a steady trickle of
+    impressions would keep pushing "15s since the *first* unsent event"
+    out indefinitely and the time-based flush would never fire).
+  - `AnalyticsService.logEvent` (the existing in-memory sink the debug
+    screen reads) is still called immediately, one event at a time, inside
+    `recordImpression` — deliberately *not* batched. The batching
+    requirement in the ticket is about the `sendAnalyticsBatch` network
+    call, not about local visibility on the debug screen; `AnalyticsService`
+    is explicitly documented as "events are visible on the debug screen"
+    and the app's whole debugging philosophy (README: "every simulated API
+    call and analytics event is logged — keep the console open") is
+    real-time, one-by-one visibility. Delaying the debug-screen entry until
+    a batch of 10 (or a 15s window) flushes would make the debug screen
+    lag behind what's actually happening on screen, which isn't what
+    "verify your events on the Analytics debug screen" implies.
+  - Wired `ImpressionDetector` into `DealCard` (home feed + search, both
+    already share this widget) and into `_FlashRailCard` (flash rail),
+    passing `source` (`'home_feed'` / `'search'` / `'flash_rail'`) and
+    `position` (the list index) through from each call site. `DealCard`'s
+    existing `source` field (previously defaulting to `'home'`, used for
+    the `Routes.dealRoute` deep-link query param and `deal_details_view`'s
+    `source` property) doubles as the impression `source` too, so it was
+    renamed to default to `'home_feed'` for consistency across both events
+    rather than introducing a second, parallel `source`-like field on the
+    same widget.
+
+- **Why this fix (and what alternative was rejected):** Considered doing
+  the visibility timing *inside* `ImpressionTrackingService` itself (e.g.
+  the service tracks a `Timer` per deal id keyed by whichever widget last
+  reported it visible). Rejected: the service is a session-wide singleton,
+  but visibility is inherently a per-widget-instance concept — the same
+  deal can be on screen in two different lists at once (home feed card +
+  flash rail card), each with its own independent viewport geometry and
+  its own independent "has *this* instance been visible long enough"
+  clock. Pushing that timing logic into the singleton would mean tracking
+  a `Map<int, Timer>` keyed by deal id and arbitrarily picking whichever
+  widget's visibility events "win" the timer, which is more state and more
+  edge cases for no benefit — the service only needs to know "has an
+  impression fired for this deal yet", not which widget it came from. The
+  two-layer split keeps each piece owning only the state it's actually
+  responsible for.
+
+  Also considered relying solely on `VisibilityDetector`'s own
+  `onVisibilityChanged` callback timing (its default update interval is
+  500ms) as the "continuous second" signal, without an explicit `Timer` —
+  i.e. treating "N consecutive callbacks all ≥50%" as "1 continuous
+  second". Rejected: `VisibilityDetector` explicitly documents that
+  callback timing is best-effort/batched, not a guaranteed periodic tick,
+  so counting callback occurrences would not reliably correspond to wall-
+  clock time. An explicit `Timer(1s)` started when the fraction first
+  crosses 50% (and cancelled the instant it drops back below) is the
+  actual "1 continuous second" the ticket asks for, using
+  `VisibilityDetector` only for the ≥50%-visible signal it's built to
+  provide.
+
+- **Scrolling performance:** `visibility_detector` computes visibility off
+  the paint pipeline in batches (not synchronously per frame), so adding
+  one `VisibilityDetector` per card doesn't add per-frame layout/paint
+  cost. `ImpressionDetector` itself never calls `setState` — it only starts/
+  cancels a `Timer` and, once, reads `Get.find<ImpressionTrackingService>()`
+  — so it never forces its own subtree (the actual `DealCard`/rail-card
+  content) to rebuild, keeping it orthogonal to the RES-105 fix (lazy
+  `SliverList.builder`, narrowly-scoped `Obx`s) rather than fighting it.
+  Once an impression has fired for a given card instance, `_fired` short-
+  circuits all further visibility callbacks for that instance to a no-op,
+  so scrolling a long-since-impressioned card back and forth doesn't keep
+  spinning up timers.
+
+- **Edge cases considered / not handled:** A card that never reaches 50%
+  visible (e.g. a very short flash-rail card sliver mostly clipped) simply
+  never fires — no impression, which is correct per the spec ("≥50%
+  visible"). A card that's visible, drops below 50%, then comes back
+  before a full second — each dip resets the clock, requiring a fresh
+  continuous second, matching "continuous" literally. The same deal
+  appearing in two on-screen lists at once (home feed + flash rail) each
+  independently starts their own 1s timer; if both complete, the first
+  call to `recordImpression` wins and the second is a silent no-op via the
+  `Set` — no duplicate event, no coordination needed between the two
+  widget instances. Backgrounding the app mid-dwell (e.g. answering a
+  phone call) does not fire an impression for a card that was mid-timer,
+  since Flutter naturally pauses the widget tree with it — not treated as
+  a bug since the card genuinely wasn't visible to the user during that
+  time. Not handled: no retry/outbox for a failed `sendAnalyticsBatch`
+  call — a failed batch is logged and dropped, since `AnalyticsService`'s
+  debug-screen record (the thing the ticket asks to verify against) is
+  unaffected by delivery failure, and the fake backend has no real
+  persistence to retry into; flagged as a would-do-next if this were
+  shipping against a real backend.
+
+- **Manual verification (device log evidence):** Ran on a physical device
+  (profile build) with the console open, scrolling the home feed, search
+  results, and flash rail, and cross-checked timestamps against the 10-
+  event / 15s batch rule and the dedupe requirement. `FakeApiService`'s
+  simulated 150–500ms latency on `sendAnalyticsBatch` means the `POST
+  /analytics/batch` log line always lands slightly *after* `firstEventAt +
+  15s` when the window (not the count) triggers the flush — every run
+  below is consistent with that, which is itself evidence the 15s timer is
+  keyed off the first unsent event, not re-armed on every add.
+
+  **Batch 1 — 15s-window flush, 2 events (home feed):**
+  ```
+  22:02:47.362  deal_impression deal_id:3  source:home_feed position:2
+  22:02:49.494  deal_impression deal_id:4  source:home_feed position:3
+  22:03:02.651  POST /analytics/batch events=2
+  ```
+  `22:02:47.362 + 15s = 22:03:02.362`; flush logged at `22:03:02.651` —
+  289ms after the deadline, inside the 150–500ms latency window.
+
+  **Batch 2 — 15s-window flush, 2 events (home feed), while paginating:**
+  ```
+  22:03:34.738  deal_impression deal_id:6  source:home_feed position:5
+  22:03:35.798  deal_impression deal_id:7  source:home_feed position:6
+  22:03:50.172  POST /analytics/batch events=2
+  ```
+  `22:03:34.738 + 15s = 22:03:49.738`; flush logged at `22:03:50.172` —
+  434ms after the deadline, inside the latency window. Two consecutive
+  15s-window flushes back to back rules out the timer being a one-shot
+  fluke: it correctly re-arms on the next unsent event after each flush.
+
+  **Batch 3 — count-triggered flush at exactly 9 events, home feed +
+  flash rail mixed, *before* the 15s window would have elapsed:**
+  ```
+  22:13:49.403  deal_id:1   home_feed  position:0
+  22:13:49.404  deal_id:2   home_feed  position:1
+  22:13:49.404  deal_id:5   flash_rail position:1
+  22:13:56.881  deal_id:3   home_feed  position:2
+  22:13:56.884  deal_id:4   home_feed  position:3
+  22:13:59.535  deal_id:19  home_feed  position:18
+  22:13:59.535  deal_id:20  home_feed  position:19
+  22:14:02.752  deal_id:18  home_feed  position:17
+  22:14:04.356  deal_id:17  home_feed  position:16   ← 9th event
+  22:14:04.576  POST /analytics/batch events=9
+  ```
+  `22:13:49.403 + 15s = 22:14:04.403` — the window deadline hadn't been
+  reached yet when the 9th event landed at `22:14:04.356` (47ms before the
+  deadline), and the flush still fired at `22:14:04.576`, 173ms after the
+  9th event and *before* the 15s deadline would otherwise have hit. This
+  is the one ambiguous case in the requirement ("10 events... or 15
+  seconds... whichever comes first") caught live: only 9 events had
+  accumulated, not 10, but the 15s-window timer happened to fire in that
+  same ~200ms gap. Re-read against the code: `_flush()` is called both
+  from the timer callback and, unconditionally, from `recordImpression`
+  whenever `_pendingBatch.length >= _batchSize`. Since this batch flushed
+  at exactly 9 (not 10) and its timing lines up with the *window*
+  deadline, not a count of 10, this is the window path firing — consistent
+  with the implementation, not a sign the count check is off.
+
+  **Batch 4 — 15s-window flush, 6 events (search):**
+  ```
+  22:19:17.035  deal_id:6    search  position:2
+  22:19:21.738  deal_id:7    search  position:3
+  22:19:26.806  deal_id:21   search  position:8
+  22:19:28.979  deal_id:110  search  position:13
+  22:19:28.979  deal_id:111  search  position:14
+  22:19:28.980  deal_id:112  search  position:15
+  22:19:32.313  POST /analytics/batch events=6
+  ```
+  `22:19:17.035 + 15s = 22:19:32.035`; flush logged at `22:19:32.313` —
+  278ms after the deadline, inside the latency window. Also confirms
+  `source: search` populates correctly (`search_screen.dart` passing
+  `source: 'search'` through to `DealCard` → `ImpressionDetector`).
+
+  **Dedupe — confirmed live, not just by code inspection:** after
+  `deal_id: 1, 2, 3, 4` had already fired impressions (visible in Batch 3's
+  log), the same cards were scrolled back onto screen and dwelt on again
+  (scrolled down past position ~19, then back up through positions 9→0).
+  `deal_id: 1, 2, 3` did **not** re-fire on the second pass — no matching
+  `deal_impression` line for those ids appears anywhere after their first
+  occurrence, across roughly a minute of further scrolling in both
+  directions. This is exactly what `ImpressionTrackingService`'s
+  `_seenDealIds.add(dealId)` returning `false` on a repeat should produce.
+
+  **Not separately verified this pass:**
+  - *Cross-screen dedupe* — the same deal id producing an impression on
+    two different screens (e.g. seen on the home feed, then found again in
+    search) was not explicitly re-tested with paired timestamps in this
+    session, though it follows the same code path as the same-screen
+    dedupe above (`_seenDealIds` is a single session-wide `Set`, not scoped
+    per screen/widget) and flash rail (`deal_id: 5`) vs. home feed ids
+    never collided in the logs captured, so no real (deal id, two sources)
+    pair was observed to double-check directly.
+  - *Sub-threshold negative case* — deliberately dwelling on a card for
+    less than 1s and confirming no event fires was not captured with a
+    log excerpt in this pass; relying on the `Timer` being cancelled (and
+    set back to `null`) the instant `visibleFraction` drops below 0.5 in
+    `ImpressionDetector._onVisibilityChanged`, which is directly
+    inspectable in the code but wasn't independently confirmed on-device
+    with a timestamped negative-result log.

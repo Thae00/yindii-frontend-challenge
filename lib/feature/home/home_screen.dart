@@ -122,7 +122,7 @@ class HomeScreen extends GetView<HomeController> {
                 return SliverList.builder(
                   itemCount: deals.length,
                   itemBuilder: (context, index) =>
-                      DealCard(deal: deals[index]),
+                      DealCard(deal: deals[index], position: index),
                 );
               }),
               const SliverToBoxAdapter(child: SizedBox(height: 24)),

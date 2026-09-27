@@ -6,6 +6,7 @@ import '../../model/deal_model.dart';
 import '../../routes/routes.dart';
 import '../../service/cart_service.dart';
 import 'flash_countdown_badge.dart';
+import 'impression_detector.dart';
 import 'the_network_image.dart';
 
 /// Deal card used in the home feed and search results.
@@ -13,7 +14,16 @@ class DealCard extends StatefulWidget {
   final DealModel deal;
   final String source;
 
-  const DealCard({super.key, required this.deal, this.source = 'home'});
+  /// Index of this deal within its list (home feed / search results).
+  /// Used for F-2 impression-tracking's `position` property.
+  final int position;
+
+  const DealCard({
+    super.key,
+    required this.deal,
+    this.source = 'home_feed',
+    this.position = 0,
+  });
 
   @override
   State<DealCard> createState() => _DealCardState();
@@ -42,7 +52,11 @@ class _DealCardState extends State<DealCard> {
   @override
   Widget build(BuildContext context) {
     final deal = widget.deal;
-    return Card(
+    return ImpressionDetector(
+      dealId: deal.id,
+      source: widget.source,
+      position: widget.position,
+      child: Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       clipBehavior: Clip.antiAlias,
       color: Colors.white,
@@ -163,6 +177,7 @@ class _DealCardState extends State<DealCard> {
           ],
           ),
         ),
+      ),
       ),
     );
   }
