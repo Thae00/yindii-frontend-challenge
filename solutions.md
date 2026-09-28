@@ -439,210 +439,328 @@ regardless of machine.
 
 ### F-2 · Impression tracking
 
-- **Approach:** Split the feature into two layers with different concerns
-  and different timing requirements, rather than one widget that does both:
-  - `ImpressionDetector` (new `StatefulWidget`, wraps a card in each list)
-    owns *"has this card instance been ≥50% visible for one continuous
-    second"*. It wraps `VisibilityDetector` (already in `pubspec.yaml`).
-    On `onVisibilityChanged`, if `visibleFraction >= 0.5` it starts a 1s
-    `Timer` (only if one isn't already running); if the fraction drops
-    below 0.5 the timer is cancelled and a fresh continuous second is
-    required next time. When the timer completes it calls
-    `ImpressionTrackingService.recordImpression(...)` exactly once, then
-    stops reacting (a `_fired` flag short-circuits further callbacks).
-  - `ImpressionTrackingService` (new `GetxService`, permanent) owns the two
-    things that must be correct *globally*, not per-widget: session-level
-    dedupe via a `Set<int>` of deal ids already recorded (`_seenDealIds`,
-    "at most once per deal per session, across all screens" — a `Set.add`
-    returning `false` is a one-line no-op for every repeat), and batching
-    delivery to `FakeApiService.sendAnalyticsBatch`, flushed at 10
-    accumulated events or 15s since the first unsent event, whichever comes
-    first (a `Timer` started only when the batch goes from empty to
-    non-empty, not re-armed on every add — otherwise a steady trickle of
-    impressions would keep pushing "15s since the *first* unsent event"
-    out indefinitely and the time-based flush would never fire).
-  - `AnalyticsService.logEvent` (the existing in-memory sink the debug
-    screen reads) is still called immediately, one event at a time, inside
-    `recordImpression` — deliberately *not* batched. The batching
-    requirement in the ticket is about the `sendAnalyticsBatch` network
-    call, not about local visibility on the debug screen; `AnalyticsService`
-    is explicitly documented as "events are visible on the debug screen"
-    and the app's whole debugging philosophy (README: "every simulated API
-    call and analytics event is logged — keep the console open") is
-    real-time, one-by-one visibility. Delaying the debug-screen entry until
-    a batch of 10 (or a 15s window) flushes would make the debug screen
-    lag behind what's actually happening on screen, which isn't what
-    "verify your events on the Analytics debug screen" implies.
-  - Wired `ImpressionDetector` into `DealCard` (home feed + search, both
-    already share this widget) and into `_FlashRailCard` (flash rail),
-    passing `source` (`'home_feed'` / `'search'` / `'flash_rail'`) and
-    `position` (the list index) through from each call site. `DealCard`'s
-    existing `source` field (previously defaulting to `'home'`, used for
-    the `Routes.dealRoute` deep-link query param and `deal_details_view`'s
-    `source` property) doubles as the impression `source` too, so it was
-    renamed to default to `'home_feed'` for consistency across both events
-    rather than introducing a second, parallel `source`-like field on the
-    same widget.
+- **Approach:** Two layers, because "has *this card* been visible long
+  enough" is per-widget state, while "at most once per deal" and "batch the
+  delivery" are session-wide.
+  - `ImpressionDetector` (new widget, `shared_widget/impression_detector.dart`)
+    wraps a card in `VisibilityDetector` (already in `pubspec.yaml`). When
+    `visibleFraction >= 0.5` it starts a 1s `Timer` (only if one isn't
+    already running); if the fraction drops below 0.5 the timer is
+    cancelled, so the second has to be *continuous*. When the timer
+    completes it calls the service once and sets a `_fired` flag so later
+    visibility callbacks for that card instance are ignored.
+  - `ImpressionTrackingService` (new permanent `GetxService`) keeps a
+    `Set<int>` of deal ids already recorded (`Set.add` returning `false` is
+    the whole dedupe, across every screen and source) and a pending batch.
+    The batch is sent through `FakeApiService.sendAnalyticsBatch` when it
+    reaches 10 events or 15s after the *first* unsent event, whichever
+    comes first. The 15s `Timer` is only created when the batch goes from
+    empty to non-empty, not re-armed on every add; re-arming would let a
+    steady trickle of impressions postpone the flush forever.
+  - `AnalyticsService.logEvent('deal_impression', {deal_id, source,
+    position})` is still called immediately, one event at a time. The
+    "don't send one by one" rule is about the `sendAnalyticsBatch` delivery;
+    the debug screen is an in-memory view that should show events as they
+    happen, so it is not delayed until a flush.
+  - Wired into `DealCard` (home feed and search share it) and
+    `_FlashRailCard`, with `source` = `home_feed` / `search` / `flash_rail`
+    and `position` = list index.
 
-- **Why this fix (and what alternative was rejected):** Considered doing
-  the visibility timing *inside* `ImpressionTrackingService` itself (e.g.
-  the service tracks a `Timer` per deal id keyed by whichever widget last
-  reported it visible). Rejected: the service is a session-wide singleton,
-  but visibility is inherently a per-widget-instance concept — the same
-  deal can be on screen in two different lists at once (home feed card +
-  flash rail card), each with its own independent viewport geometry and
-  its own independent "has *this* instance been visible long enough"
-  clock. Pushing that timing logic into the singleton would mean tracking
-  a `Map<int, Timer>` keyed by deal id and arbitrarily picking whichever
-  widget's visibility events "win" the timer, which is more state and more
-  edge cases for no benefit — the service only needs to know "has an
-  impression fired for this deal yet", not which widget it came from. The
-  two-layer split keeps each piece owning only the state it's actually
-  responsible for.
+- **Side effect to be aware of:** `DealCard.source` used to default to
+  `'home'`. It is also the `source` query param passed to
+  `Routes.dealRoute`, so it now defaults to `'home_feed'` to match the
+  impression spec, which also changes the `source` on `deal_details_view`
+  events from `home` to `home_feed`. That is visible in the F-3 logs
+  (`deal_details_view {deal_id: 1, source: home_feed}`). Nothing else reads
+  that value.
 
-  Also considered relying solely on `VisibilityDetector`'s own
-  `onVisibilityChanged` callback timing (its default update interval is
-  500ms) as the "continuous second" signal, without an explicit `Timer` —
-  i.e. treating "N consecutive callbacks all ≥50%" as "1 continuous
-  second". Rejected: `VisibilityDetector` explicitly documents that
-  callback timing is best-effort/batched, not a guaranteed periodic tick,
-  so counting callback occurrences would not reliably correspond to wall-
-  clock time. An explicit `Timer(1s)` started when the fraction first
-  crosses 50% (and cancelled the instant it drops back below) is the
-  actual "1 continuous second" the ticket asks for, using
-  `VisibilityDetector` only for the ≥50%-visible signal it's built to
-  provide.
+- **Why this fix (and what was rejected):**
+  - Doing the visibility timing inside the singleton service (a
+    `Map<int, Timer>` per deal id) was rejected: the same deal can be on
+    screen in two lists at once, each with its own geometry and its own
+    dwell clock, and the service only needs to know whether an impression
+    already fired. Both widgets run their own timer; the first to finish
+    wins and the second is a no-op at the `Set`.
+  - Counting `VisibilityDetector` callbacks as "one second" was rejected:
+    its callbacks are throttled (default 500ms) and best-effort, so their
+    count is not wall-clock time. It is used only for the ≥50% signal; the
+    one second comes from an explicit `Timer`.
 
-- **Scrolling performance:** `visibility_detector` computes visibility off
-  the paint pipeline in batches (not synchronously per frame), so adding
-  one `VisibilityDetector` per card doesn't add per-frame layout/paint
-  cost. `ImpressionDetector` itself never calls `setState` — it only starts/
-  cancels a `Timer` and, once, reads `Get.find<ImpressionTrackingService>()`
-  — so it never forces its own subtree (the actual `DealCard`/rail-card
-  content) to rebuild, keeping it orthogonal to the RES-105 fix (lazy
-  `SliverList.builder`, narrowly-scoped `Obx`s) rather than fighting it.
-  Once an impression has fired for a given card instance, `_fired` short-
-  circuits all further visibility callbacks for that instance to a no-op,
-  so scrolling a long-since-impressioned card back and forth doesn't keep
-  spinning up timers.
+- **Scrolling performance:** `ImpressionDetector` never calls `setState`; it
+  only starts/cancels a `Timer`, so it does not rebuild the card it wraps.
+  Once `_fired` is set, further callbacks return immediately. **No frame
+  timing or DevTools numbers were captured for F-2**, so this is a design
+  argument, not a measurement.
 
-- **Edge cases considered / not handled:** A card that never reaches 50%
-  visible (e.g. a very short flash-rail card sliver mostly clipped) simply
-  never fires — no impression, which is correct per the spec ("≥50%
-  visible"). A card that's visible, drops below 50%, then comes back
-  before a full second — each dip resets the clock, requiring a fresh
-  continuous second, matching "continuous" literally. The same deal
-  appearing in two on-screen lists at once (home feed + flash rail) each
-  independently starts their own 1s timer; if both complete, the first
-  call to `recordImpression` wins and the second is a silent no-op via the
-  `Set` — no duplicate event, no coordination needed between the two
-  widget instances. Backgrounding the app mid-dwell (e.g. answering a
-  phone call) does not fire an impression for a card that was mid-timer,
-  since Flutter naturally pauses the widget tree with it — not treated as
-  a bug since the card genuinely wasn't visible to the user during that
-  time. Not handled: no retry/outbox for a failed `sendAnalyticsBatch`
-  call — a failed batch is logged and dropped, since `AnalyticsService`'s
-  debug-screen record (the thing the ticket asks to verify against) is
-  unaffected by delivery failure, and the fake backend has no real
-  persistence to retry into; flagged as a would-do-next if this were
-  shipping against a real backend.
+- **Edge cases:** A card that never reaches 50% never fires. A dip below 50%
+  resets the dwell. The same deal in two lists is deduped by the `Set`. A
+  failed `sendAnalyticsBatch` is logged and dropped (no retry/outbox): the
+  fake backend has nothing to retry into, and the debug-screen record is
+  independent of delivery. That would be the first thing to change against
+  a real backend.
 
-- **Manual verification (device log evidence):** Ran on a physical device
-  (profile build) with the console open, scrolling the home feed, search
-  results, and flash rail, and cross-checked timestamps against the 10-
-  event / 15s batch rule and the dedupe requirement. `FakeApiService`'s
-  simulated 150–500ms latency on `sendAnalyticsBatch` means the `POST
-  /analytics/batch` log line always lands slightly *after* `firstEventAt +
-  15s` when the window (not the count) triggers the flush — every run
-  below is consistent with that, which is itself evidence the 15s timer is
-  keyed off the first unsent event, not re-armed on every add.
+#### F-2 verification (Android device, console logs)
 
-  **Batch 1 — 15s-window flush, 2 events (home feed):**
-  ```
-  22:02:47.362  deal_impression deal_id:3  source:home_feed position:2
-  22:02:49.494  deal_impression deal_id:4  source:home_feed position:3
-  22:03:02.651  POST /analytics/batch events=2
-  ```
-  `22:02:47.362 + 15s = 22:03:02.362`; flush logged at `22:03:02.651` —
-  289ms after the deadline, inside the 150–500ms latency window.
+`sendAnalyticsBatch` logs `POST /analytics/batch` *after* its own simulated
+150–500ms latency, so with a 15s window the log line should land at
+`first event + 15s + 150…500ms`. Observed:
 
-  **Batch 2 — 15s-window flush, 2 events (home feed), while paginating:**
-  ```
-  22:03:34.738  deal_impression deal_id:6  source:home_feed position:5
-  22:03:35.798  deal_impression deal_id:7  source:home_feed position:6
-  22:03:50.172  POST /analytics/batch events=2
-  ```
-  `22:03:34.738 + 15s = 22:03:49.738`; flush logged at `22:03:50.172` —
-  434ms after the deadline, inside the latency window. Two consecutive
-  15s-window flushes back to back rules out the timer being a one-shot
-  fluke: it correctly re-arms on the next unsent event after each flush.
+| Batch | First unsent event | Flush logged | Gap | Over deadline | Events |
+|---|---|---|---|---|---|
+| 1 | 22:02:47.362 | 22:03:02.651 | 15.289s | +289ms | 2 |
+| 2 | 22:03:34.738 | 22:03:50.172 | 15.434s | +434ms | 2 |
+| 3 | 22:13:49.403 | 22:14:04.576 | 15.173s | +173ms | 9 |
+| 4 | 22:19:17.035 | 22:19:32.313 | 15.278s | +278ms | 6 |
 
-  **Batch 3 — count-triggered flush at exactly 9 events, home feed +
-  flash rail mixed, *before* the 15s window would have elapsed:**
-  ```
-  22:13:49.403  deal_id:1   home_feed  position:0
-  22:13:49.404  deal_id:2   home_feed  position:1
-  22:13:49.404  deal_id:5   flash_rail position:1
-  22:13:56.881  deal_id:3   home_feed  position:2
-  22:13:56.884  deal_id:4   home_feed  position:3
-  22:13:59.535  deal_id:19  home_feed  position:18
-  22:13:59.535  deal_id:20  home_feed  position:19
-  22:14:02.752  deal_id:18  home_feed  position:17
-  22:14:04.356  deal_id:17  home_feed  position:16   ← 9th event
-  22:14:04.576  POST /analytics/batch events=9
-  ```
-  `22:13:49.403 + 15s = 22:14:04.403` — the window deadline hadn't been
-  reached yet when the 9th event landed at `22:14:04.356` (47ms before the
-  deadline), and the flush still fired at `22:14:04.576`, 173ms after the
-  9th event and *before* the 15s deadline would otherwise have hit. This
-  is the one ambiguous case in the requirement ("10 events... or 15
-  seconds... whichever comes first") caught live: only 9 events had
-  accumulated, not 10, but the 15s-window timer happened to fire in that
-  same ~200ms gap. Re-read against the code: `_flush()` is called both
-  from the timer callback and, unconditionally, from `recordImpression`
-  whenever `_pendingBatch.length >= _batchSize`. Since this batch flushed
-  at exactly 9 (not 10) and its timing lines up with the *window*
-  deadline, not a count of 10, this is the window path firing — consistent
-  with the implementation, not a sign the count check is off.
+All four overshoots are inside the 150–500ms latency band, so the timer
+fires 15s after the *first* event of each batch. Batch 3 had 9 events (one
+short of the count trigger), so it went out on the window, not the count.
 
-  **Batch 4 — 15s-window flush, 6 events (search):**
-  ```
-  22:19:17.035  deal_id:6    search  position:2
-  22:19:21.738  deal_id:7    search  position:3
-  22:19:26.806  deal_id:21   search  position:8
-  22:19:28.979  deal_id:110  search  position:13
-  22:19:28.979  deal_id:111  search  position:14
-  22:19:28.980  deal_id:112  search  position:15
-  22:19:32.313  POST /analytics/batch events=6
-  ```
-  `22:19:17.035 + 15s = 22:19:32.035`; flush logged at `22:19:32.313` —
-  278ms after the deadline, inside the latency window. Also confirms
-  `source: search` populates correctly (`search_screen.dart` passing
-  `source: 'search'` through to `DealCard` → `ImpressionDetector`).
+- **Dedupe (same screen):** after `deal_id` 1–4 had fired, scrolling down
+  past position ~19 and back up to the top produced no second impression
+  for `deal_id` 1, 2, 3 (reported from watching the console; the pasted log
+  excerpts contain each of these ids once).
+- **Sources and properties:** `home_feed` (positions 0–19), `flash_rail`
+  (`deal_id: 5`, position 1) and `search` (positions 2–15) all appeared
+  with the expected `deal_id`/`source`/`position` shape.
 
-  **Dedupe — confirmed live, not just by code inspection:** after
-  `deal_id: 1, 2, 3, 4` had already fired impressions (visible in Batch 3's
-  log), the same cards were scrolled back onto screen and dwelt on again
-  (scrolled down past position ~19, then back up through positions 9→0).
-  `deal_id: 1, 2, 3` did **not** re-fire on the second pass — no matching
-  `deal_impression` line for those ids appears anywhere after their first
-  occurrence, across roughly a minute of further scrolling in both
-  directions. This is exactly what `ImpressionTrackingService`'s
-  `_seenDealIds.add(dealId)` returning `false` on a repeat should produce.
+**Not verified (do not read the above as covering these):**
+- The 10-event count trigger: no batch of 10 was ever observed on device.
+- Cross-screen dedupe (same deal id seen in two different lists): the
+  home-feed and search runs I have logs for never overlapped on a deal id.
+  It relies on the single session-wide `Set`, not on any test.
+- The sub-threshold case (card visible < 1s → no event) was not captured
+  in a log; it relies on the cancel-on-dip logic in `_onVisibilityChanged`.
+- The `onClose()` best-effort flush of a partial batch.
+- Scroll performance, as noted above.
 
-  **Not separately verified this pass:**
-  - *Cross-screen dedupe* — the same deal id producing an impression on
-    two different screens (e.g. seen on the home feed, then found again in
-    search) was not explicitly re-tested with paired timestamps in this
-    session, though it follows the same code path as the same-screen
-    dedupe above (`_seenDealIds` is a single session-wide `Set`, not scoped
-    per screen/widget) and flash rail (`deal_id: 5`) vs. home feed ids
-    never collided in the logs captured, so no real (deal id, two sources)
-    pair was observed to double-check directly.
-  - *Sub-threshold negative case* — deliberately dwelling on a card for
-    less than 1s and confirming no event fires was not captured with a
-    log excerpt in this pass; relying on the `Timer` being cancelled (and
-    set back to `null`) the instant `visibleFraction` drops below 0.5 in
-    `ImpressionDetector._onVisibilityChanged`, which is directly
-    inspectable in the code but wasn't independently confirmed on-device
-    with a timestamped negative-result log.
+### F-3 · Stock reservations with optimistic UI
+
+- **Approach:** `CartService` now backs every bag line with a real
+  reservation (`OrderRepo.reserve` / `releaseReservation`, which already
+  wrapped `FakeApiService`), instead of being local-only state.
+  - `add()`, `decrement()` and `remove()` change `items` / `itemCount`
+    **synchronously first**, then reconcile with the backend without
+    awaiting. Nothing in the UI waits on the network to show a line
+    appearing, changing quantity or disappearing, and the existing call
+    sites (`cartService.add(deal)` etc.) did not need to change.
+  - `_reconcileLine()` is the only place that calls `reserveDeal`. It sets
+    `CartItemModel.isReserving = true` (new field), requests a hold for the
+    line's *current* quantity, and on success attaches the
+    `ReservationModel`. On failure (409) it removes the whole line and shows
+    a plain-language snackbar ("<name> just sold out — sorry! It has been
+    removed from your bag") instead of the raw `ApiException` text.
+  - While a line is `isReserving`, its +/− buttons are disabled and the
+    Checkout button is disabled with a "Confirming stock for your bag…"
+    note. Checkout would otherwise send `reservationId: null` for that line,
+    and the fake backend only validates reservation ids it is given, so an
+    unconfirmed line would be bought without ever holding stock. (I can't
+    change the backend, so the guard is on the client.)
+  - Race guard: a per-deal `_lineOpToken` counter is bumped on every
+    add/quantity change/removal. Each reconcile remembers its token; if a
+    newer operation has run by the time its response arrives, a late
+    *success* is released straight away (so no orphaned 5-minute hold) and
+    a late *failure* is ignored. Same idea as the `_epoch` guard from
+    RES-104.
+  - Reducing a quantity (not to zero) releases the old hold and reserves a
+    new one for the new quantity, through the same path. The backend has
+    only reserve/release, no partial adjust. Removing a line (or
+    decrementing to zero) releases its hold.
+  - Each line shows its remaining hold using `FlashCountdownBadge` from F-1,
+    unchanged (it was already a generic `endsAt` countdown with `onExpired`).
+    Bag rows are now keyed by deal id so a line's countdown stays attached
+    to the right item when a line above it is removed.
+  - Checkout: on `410` the controller calls
+    `CartService.pruneExpiredReservations()` (re-checks each line's own
+    `ReservationModel.isExpired`, since the response doesn't say which line)
+    and shows one snackbar. A successful checkout calls
+    `clearAfterCheckout()`, which deliberately does *not* release holds:
+    they were just consumed by the order. The general `clear()` (unused
+    today) does release, so a future "empty bag" button can't reuse the
+    checkout path by mistake.
+  - Interactions with earlier tickets: F-1's flash-expiry calls
+    `CartService.remove()`, which now also releases the hold. RES-103's
+    `ever(itemCount, …)` re-check fires on both the optimistic add and the
+    rollback of a failed add, so a failed add causes two `GET /deals/:id`
+    (visible in the log at 13:59:57). Bounded, and the worker is disposed
+    with the controller, so this is not the RES-103 leak.
+
+- **The underspecified part — a hold expires while the user is still in the
+  app (or mid-checkout).** Decision: **auto-remove the line and tell the
+  user** (`handleReservationExpired`, called from the line's countdown),
+  the same behaviour F-1 already gives an expired flash sale (item dropped
+  from the bag, snackbar explains). Reasons:
+  - A line past its `expiresAt` no longer has stock behind it (checkout
+    would answer `410`). Leaving it in the bag looking normal promises
+    stock that isn't there.
+  - It matches an existing pattern in this app, so a user who has seen a
+    flash-sale item disappear with a notice already understands it.
+  - Rejected: keep the line with a "renew" button. It adds a second
+    interactive line state (held → expired → renewing → held) and re-opens
+    the same stock race unless it is guarded as carefully as the first
+    reservation. Reasonable follow-up if product wants it; not needed to
+    ship this safely.
+  - Rejected: do nothing until checkout. The ticket asks for a per-line
+    countdown; a countdown that reaches 00:00 and changes nothing
+    contradicts what the user is looking at.
+  - Known costs of this choice: (1) if a countdown expiry and a checkout
+    `410` coincide, the user sees two snackbars ("Hold expired", then
+    "Some holds expired…"), which is a bit noisy. (2) The countdown only
+    exists while the bag screen is mounted, so if a hold expires while the
+    user is on another screen the line stays in `CartService.items` (and in
+    the bag count) until the bag is next opened; the badge then sees an
+    `endsAt` in the past and calls `onExpired` on the first frame. A
+    session-level expiry timer in `CartService` would close that gap.
+    (3) The badge ticks once a second, so for up to one second after real
+    expiry the line can still be shown and tapped; that gap is the main
+    case where `pruneExpiredReservations()` matters.
+
+- **Why this design (and what was rejected):**
+  - Reservation calls in `CartController` / `DealDetailsController` instead
+    of `CartService` were rejected: `CartService` is the single source of
+    truth, and both add paths (details "Add to bag", bag "+") need
+    identical behaviour.
+  - Making `add()` return a `Future` for callers to await was rejected: it
+    breaks the "instant" feel at the call site and makes every caller
+    responsible for the failure case. The rollback notice lives in one
+    place.
+
+- **Not handled / trade-offs:**
+  - The release of the old hold and the reserve of the new one are issued
+    together (not release-then-reserve), so they complete in either order
+    (seen in the log). The fake backend never decrements on reserve, so this
+    is harmless here; against a real backend with tight stock it could cause
+    a spurious 409, and awaiting the release first would avoid that at the
+    cost of latency.
+  - The new-item branch of `add()` has no `quantityLeft` pre-check and the
+    details screen doesn't disable "Add to bag" at 0 left, so a sold-out
+    deal is added optimistically and then rolled back (observed: deal 6 at
+    14:05:31 after its last unit had been bought). The 409 path handles it
+    correctly, but a sold-out label would be nicer.
+  - No automatic retry on 409 (the ticket says it fails intermittently);
+    the user can tap "Add to bag" again. A failed `releaseReservation` is
+    logged and ignored; the hold simply expires server-side after 5 minutes.
+
+#### F-3 verification (Android device)
+
+**Requirement status** (evidence is detailed below the table):
+
+| Requirement | Status | Evidence |
+|---|---|---|
+| Add to bag reserves stock; UI updates optimistically | ✅ | console log + recording |
+| Reservation fails (409) → line rolled back with a plain-language message | ✅ | console log + recording (random contention and real sold-out both seen) |
+| Quantity ↑/↓ → old hold released, new one reserved | ✅ | console log |
+| Removing a line → hold released | ✅ | console log |
+| Each line shows its remaining hold time | ✅ | screenshot + recording |
+| Hold expires while in the bag → line removed with a notice | ✅ | screenshot + recording |
+| Checkout / +/− disabled while a line is still reserving | ✅ | recording (Add-to-bag path); "+/−" path reported by the author |
+| Checkout success does not release the consumed holds | ✅ | console log + recording |
+| Checkout `410` handled gracefully | ✅ | console log + recording; snackbar text, `pruneExpiredReservations()` and the race guard were tested separately by the author (see below) |
+
+Evidence is the console log of one session (13:55–14:05) plus screenshots
+and screen recordings taken during testing (not committed to the repo).
+Three **test-only edits** were used and never committed: a 4s delay before
+`reserve` in `_reconcileLine` (normal reserve latency is 350–1100ms, too
+short to screenshot `isReserving`), and, in `fake_api_service.dart`, the
+hold shortened from 5 minutes to 20s and the checkout latency raised to
+10–10.5s (to hit `410` by hand).
+
+**Console log (reservation bookkeeping, no test edits):**
+
+| Time | Log | What it shows |
+|---|---|---|
+| 13:55:50 | `POST /reservations dealId=1` | add → hold (res_1) |
+| 13:59:50 | `POST /reservations dealId=2` | add → hold (res_2) |
+| 13:59:57 | `dealId=3` then `ERROR: reservation failed … 409 … someone grabbed the last one` | random contention (`_mutationCounter % 5 == 3`) → rollback; no reservation id consumed |
+| 14:00:08 | `POST /reservations dealId=4` | res_3 |
+| 14:01:32 / :33 | `DELETE res_2`, `POST dealId=2 qty=2` | "+" → old hold released, new one (res_4) |
+| 14:01:36 / :37 | `DELETE res_3`, `POST dealId=4 qty=2` | "+" on another line (res_5) |
+| 14:01:45 | `DELETE res_4`, `POST dealId=2 qty=1` | "−" → released and re-reserved at qty 1 (res_6) |
+| 14:02:04 | `DELETE res_6` | line removed → hold released |
+| 14:03:07 | `POST /checkout items=1` then `502 … card was not charged` | checkout failure; bag kept |
+| 14:04:26 | `POST /checkout items=1` | retry succeeds |
+| 14:04:55 | `POST /checkout items=1` (deal 6, res_7) | success |
+| 14:05:31 | `dealId=6` → `409 Not enough stock left` | real sold-out → rollback |
+
+Ids run res_1…res_7 with no gaps or duplicates, so no reservation was
+orphaned or double-created by the quantity changes. No `DELETE
+/reservations/…` follows either successful checkout (consumed holds are not
+released).
+
+**Screenshots / recordings:**
+- *Optimistic add + `isReserving`* (with the 4s test delay): bag opened
+  straight after "Add to bag" shows "Holding your item…", greyed +/−,
+  "Confirming stock for your bag…" and a greyed Checkout; after the delay
+  `Held for 04:57` and Checkout turns green. In normal use this window is
+  only the 350–1100ms reserve latency.
+- *409 rollback in the UI:* the line disappears and the snackbar reads
+  "Couldn't hold this item — Last-call Bakery Bag just sold out — sorry! It
+  has been removed from your bag."
+- *Expiry while on the bag screen:* `Held for 00:01`, then the line is gone,
+  "Your bag is empty", and "Hold expired — Chef's Thai Bundle's 5-minute
+  hold ran out, so it was removed from your bag…".
+- *Checkout success:* spinner, then "Order confirmed — Order #9102 — pick up
+  soon!" and an empty bag.
+- *Checkout `410`* (test edits: 20s hold, ~10s checkout latency): Checkout
+  tapped at `00:05`. About 5s later the countdown reached zero mid-request
+  and the line was removed with "Hold expired". About 10s after the tap the
+  console printed `09:43:30.551 ERROR: checkout failed | ApiException(410):
+  Reservation expired — stock was released`. The server checks expiry
+  *after* its latency, so a tap only produces `410` when the remaining time
+  is shorter than that latency; two earlier attempts tapped with 10s and
+  16s left (latency ~6s) and both succeeded, as this predicts.
+
+**Tested separately by the author (self-reported; no log or recording of
+these runs is attached here, so treat them as the author's word rather than
+evidence in this file):**
+- The full text of the "Some holds expired…" snackbar after a `410`, and
+  Checkout returning to its normal state afterwards.
+- `pruneExpiredReservations()` removing a locally-expired line.
+- The stale-result branches of the `_lineOpToken` guard under rapid taps.
+- "+/−" greying Checkout while a line is reconciling.
+
+**Not verified:**
+- Deal 1 vanishing from the bag in the 13:55–14:05 log is consistent with
+  expiry (hold ends ≈14:00:50 while the bag was open from 14:00:10) but the
+  log can't show the snackbar, so that one is an inference; expiry itself is
+  confirmed by the screenshots above.
+- No automated tests were added, and `flutter analyze` output is not
+  recorded here.
+
+### F-3 addendum · Flash-sale items in the bag (deadline = hold OR sale end)
+
+- **Problem found on review:** the bag showed `Held for 05:00` for every line,
+  even a flash deal whose sale ended in 2 minutes. Flash expiry was only
+  handled by `DealCard`, `_FlashRailCard` and `DealDetailsController`, i.e.
+  only while one of those was mounted. On the bag screen none of them is, so
+  the line stayed with a live-looking hold. The backend's `checkout` validates
+  reservation ids only and never `flashSaleEndsAt`, so that line could also be
+  bought at the flash price after the sale ended.
+- **Fix:**
+  - `CartItemModel.effectiveDeadline` = earlier of `reservation.expiresAt` and
+    `deal.flashSaleEndsAt`; `endsByFlashSale` picks the label
+    ("Flash sale ends in" vs "Held for") and colour.
+  - `CartService` owns one `Timer` per line aimed at that deadline
+    (`_scheduleDeadline`), so expiry no longer depends on any widget being
+    mounted. It is set when a flash line is added (before the reservation
+    returns), rescheduled when a reservation lands, and cancelled on every
+    removal path and in `onClose`.
+  - `handleLineExpired` replaces `handleReservationExpired`. Flash ended →
+    remove and **release** the still-valid hold (frees stock at once). Hold
+    ended → remove without release (already expired server-side). It is
+    idempotent, so the timer and the bag badge can both fire and the user sees
+    one notice.
+  - `pruneFlashExpired()` runs at the start of `checkout()`; if it removes
+    anything, checkout stops and asks the user to review the bag (the total
+    changed) rather than continuing automatically.
+  - `CartService.add()` and `DealModel.isFlashExpired` refuse to add a deal
+    whose sale has ended (covers the bag's "+" button).
+- **Rejected:** capping the reservation itself to the sale end. The backend
+  fixes the hold at 5 minutes and cannot be changed, so the client aims at the
+  earlier deadline instead.
+- **Not handled:** a sale that ends *while* a checkout request is already in
+  flight (the backend would still accept it; needs a server-side check).
+  Device clock changes shift local deadlines; the server clock is the source
+  of truth and no offset correction is applied. Not compiled or run in this
+  environment (no Flutter SDK): needs `flutter analyze` and a manual run with a
+  flash deal whose `flashSaleMinutes` is under 5.
