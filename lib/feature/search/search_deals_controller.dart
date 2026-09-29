@@ -39,6 +39,7 @@ class SearchDealsController extends GetxController {
     if (trimmed.isEmpty) {
       results.clear();
       hasSearched.value = false;
+      isLoading.value = false; // add: a stale in-flight request no longer resets this
       return;
     }
 
