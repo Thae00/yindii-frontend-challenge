@@ -764,3 +764,208 @@ evidence in this file):**
   of truth and no offset correction is applied. Not compiled or run in this
   environment (no Flutter SDK): needs `flutter analyze` and a manual run with a
   flash deal whose `flashSaleMinutes` is under 5.
+
+## Part C — Written deliverables
+
+The per-ticket / per-feature write-ups (root cause, chosen fix, rejected
+alternative, edge cases) are in Part A and Part B above. The remaining
+deliverables are below.
+
+### AI usage log
+
+**Tools used and for what**
+
+- Claude (claude.ai): used throughout for proposing fixes and feature code and
+  for drafting this `solutions.md`. I chose it because I find it convenient for
+  development work.
+- I did not accept its output on trust. I tested each change one by one on a
+  real device to check it actually did what I wanted before committing it.
+
+**Example 1 — an AI suggestion that was wrong or misleading**
+
+- Ticket / feature: F-3 — expiry of bag lines that are also flash deals.
+- What the AI suggested: the first F-3 version gave every bag line a plain
+  `Held for 05:00` hold countdown, and left flash-sale expiry to the widgets
+  that already handled it (`DealCard`, `_FlashRailCard`,
+  `DealDetailsController`).
+- Why it was wrong or misleading: none of those widgets is mounted on the bag
+  screen, so a flash deal whose sale ended in 2 minutes still showed a
+  live-looking 5-minute hold. Because the backend's `checkout` validates only
+  reservation ids and never `flashSaleEndsAt`, that line could also have been
+  bought at the flash price after the sale ended.
+- How I caught it: while reviewing the F-3 diff I noticed the bag showed
+  `Held for 05:00` for every line. I then opened the bag with a flash deal
+  whose sale ends in 2 minutes and saw the hold still looked live. I realised
+  that any flash sale with under 5 minutes left would make a flat 5-minute
+  hold misleading, so I had it reworked as a separate change.
+- What I did instead: added `CartItemModel.effectiveDeadline` (earlier of hold
+  expiry and sale end), one `Timer` per line in `CartService` so expiry no
+  longer depends on a mounted widget, and `pruneFlashExpired()` at the start of
+  `checkout()`. See "F-3 addendum" in Part B.
+
+**Example 2: an AI-written claim that the code did not back up**
+
+- Ticket / feature: RES-101, search race condition.
+- What the AI suggested: a 300ms debounce plus a `_requestId` guard, and a
+  write-up saying clearing the search box mid-flight clears `results`, resets `hasSearched` and
+  `isLoading`, and the later stale response is discarded by the id guard.
+  (An earlier version of this fix forgot to reset `isLoading` on this path,
+  leaving the spinner on).
+- Why it was wrong or misleading: the stale-result half is true, but
+  `isLoading` was never reset on that path. `_search('')` clears `results`
+  and returns early without touching `isLoading`. The in-flight request's
+  `finally` only resets it when its id is still the latest, and after the
+  clear it is not. So the spinner stays on until the next search. The
+  write-up claimed a case was handled that the code did not handle.
+- How I caught it: in a final review pass over the finished repo, checking
+  each edge-case claim in `solutions.md` against the code path it describes
+  rather than trusting the summary. The claim "clearing mid-flight is
+  handled" did not survive tracing `isLoading` through `_search`. Reproduced
+  on device: type "sushi", clear the box before results arrive, spinner
+  keeps spinning.
+- What I did instead: set `isLoading.value = false` in the empty-query
+  branch. Re-tested on device: spinner gone and hint text returns.
+  I also corrected the edge-case paragraph under RES-101 so it says what
+  the code does.
+- Lesson: an AI's description of its own fix describes what it intended.
+  Summary claims need to be checked against the code, especially for
+  early-return branches, where state set before the `await` is easy to
+  leave dangling.
+
+### Design questions
+
+**Q1 — `GetxController` lifecycle vs widget `State` lifecycle; a Part A bug
+caused by mixing them up.**
+
+A widget `State` is owned by the element tree. It is created when its widget
+is first inserted, runs `initState` → `didChangeDependencies` → `build` (many
+times) → `dispose`, has a `BuildContext` and a `mounted` flag, and dies
+exactly when that widget leaves the tree. A `GetxController` is owned by
+GetX's dependency container instead. In this app the screen controllers are
+`Get.lazyPut` inside a per-route `Binding`, so they are created when the
+route's page first looks them up, get `onInit` at creation and `onReady`
+after the first frame, and get `onClose` when GetX removes that route's
+dependencies; the services (`CartService`, `AnalyticsService`,
+`ImpressionTrackingService`) are `permanent: true` and never close. The two
+lifetimes overlap but are different objects with different hooks, and neither
+cleans up what the other acquired: `State.dispose()` does not call
+`onClose()`, and `onClose()` cannot cancel a `State`'s `Timer`. A controller
+also has no `mounted` or context, so an async method on it can finish after
+the controller is already closed. RES-102 and RES-103 are the two halves of
+this. In RES-102 the `Timer` lived in `_PickupCountdownState` and needed
+`State.dispose()`. RES-103 is the one that comes from mixing the lifetimes up:
+`DealDetailsController` is route-scoped, but its `ever()` worker subscribes to
+`cartService.itemCount`, which belongs to a *permanent* service, so a
+longer-lived object ended up holding a callback into a shorter-lived one.
+"The screen closed, so its listener is gone" is only true for subscriptions
+the framework owns (an `Obx` is torn down with its widget); a `Worker` you
+register by hand is only torn down by `onClose()` if you put it there.
+
+**Q2 — When does one large `Obx` hurt, and how do I decide how tightly to
+scope reactivity?**
+
+An `Obx` re-runs its whole builder whenever *any* observable read inside it
+changes, so its cost is roughly (how often the fastest observable it reads
+changes) × (how big a subtree it rebuilds). It hurts when those two are
+mismatched. In RES-105 the whole `Scaffold` sat inside one `Obx` that read
+`scrollOffset`, which changes on every scroll tick, so the AppBar, FAB,
+filter chip and the entire feed were rebuilt continuously (heap snapshot:
+2,460 live `DealCard` instances before vs. 3–5 after scoping; UI-thread time
+0.7 → 0.3 ms per frame — raster time was unchanged, see RES-105). A big `Obx`
+also hides its dependencies: a getter such as `visibleDeals` quietly reads
+`todayOnly` and `deals`, so the `Obx` subscribes to both, and adding a fast
+observable later slows the whole screen without any visible change in the
+code. My rule of thumb: (1) read `.value` as deep in the tree as possible, at
+the widget that actually renders it; (2) anything that changes per frame or
+per second gets the smallest possible widget — for the countdowns I did not
+use an observable at all, because a `Timer` inside a small `StatefulWidget`
+means nothing else ever needs to know the value; (3) slow-changing state such
+as `isLoading` switching a spinner for content can stay in one coarse `Obx`,
+since splitting it buys nothing and costs readability; (4) confirm with
+Rebuild Stats rather than by feel. Over-splitting has its own cost: every
+`Obx` is a listener, and a page of tiny ones is harder to reason about.
+
+**Q3 — An automated test that would have caught RES-106, and what I would
+change in the code to allow it.**
+
+The trap is that RES-106 only reproduces when the machine's local time zone is
+not UTC, and most CI runners are UTC. On such a machine `start.hour` (the UTC
+hour) equals the local hour, so a naive test passes against the buggy code —
+a green test that proves nothing. The existing `test/model_test.dart` has this
+gap: it asserts `pickupWindow.start.isUtc` and never touches `label` or
+`isToday`. The test therefore needs (a) a fixed, non-UTC zone, set with the
+`TZ` environment variable for the test process, plus a `setUpAll` that fails
+loudly if the zone is not what the test assumes, and (b) a fixed "now". The
+second needs one small code change: `isToday` reads `DateTime.now()` directly,
+so I would add `bool isTodayAt(DateTime now)` and make the existing getter
+delegate to it (`bool get isToday => isTodayAt(DateTime.now());`), with no
+behaviour change. Dart cannot switch time zone inside a running test without
+adding a package, and packages are pinned, so CI would run the file twice:
+once with `TZ=Asia/Bangkok` (positive offset) and once with
+`TZ=America/Los_Angeles` (negative offset, day rolls the other way). Verify
+once locally that `TZ` takes effect in your `flutter test` setup.
+
+```dart
+// test/pickup_window_model_test.dart
+// Run with:  TZ=Asia/Bangkok flutter test test/pickup_window_model_test.dart
+void main() {
+  setUpAll(() {
+    // Fail loudly instead of passing vacuously on a UTC machine.
+    expect(DateTime.now().timeZoneOffset, const Duration(hours: 7),
+        reason: 'run this test with TZ=Asia/Bangkok');
+  });
+
+  // Bakery open 06:00–09:30 Bangkok time on 2 Jan = 23:00Z (1 Jan) – 02:30Z.
+  final bakery = PickupWindowModel.fromJson({
+    'start': '2026-01-01T23:00:00.000Z',
+    'end': '2026-01-02T02:30:00.000Z',
+  });
+
+  test('label is shown in local time', () {
+    // Buggy code printed "23:00 – 02:30".
+    expect(bakery.label, '06:00 – 09:30');
+  });
+
+  test('isToday uses the local calendar day, not the UTC day', () {
+    // 00:30 local on 2 Jan is still 1 Jan in UTC.
+    final now = DateTime.parse('2026-01-02T00:30:00+07:00');
+    expect(bakery.isTodayAt(now), isTrue); // buggy code compared 1 vs 2
+  });
+}
+```
+
+---
+
+### Time spent and what I would do with one more day
+
+**Time spent:** roughly 15 hours over 5 days (23, 25, 26, 27, 28 Sep).
+
+- Setup and build fix, RES-101–103: ~3 h (23 Sep)
+- RES-104–107, including DevTools profiling for RES-105: ~4 h (25 Sep)
+- F-1, including on-device testing: ~2 h (26 Sep)
+- F-2, including on-device verification: ~2 h (27 Sep)
+- F-3, its flash-sale addendum, and manual testing: ~3 h (28 Sep)
+- solutions.md and Part C: ~1 h
+
+Estimates, not a stopwatch. Commit times only show when work was saved.
+
+**With one more day, in priority order:**
+
+1. **Automated tests for what I only verified by hand:** the RES-106 test
+   above (with the two-zone CI run); `ImpressionTrackingService` under
+   `fakeAsync` (10-event trigger, 15 s window, dedupe across sources); and
+   `CartService` (409 rollback, the `_lineOpToken` stale-response branches).
+   These are exactly the items listed under "Not verified" in F-2 and F-3.
+2. **Close the measurement gaps:** DevTools frame timing for F-2 scrolling
+   (currently a design argument, not a measurement), and a longer RES-105
+   soak (20+ pages, profile mode, mid-range device) to show the memory curve
+   the ticket describes.
+3. **F-3 rough edges I already know about:** await the old release before
+   issuing the new reserve (avoids a spurious 409 on tight stock); pre-check
+   `quantityLeft` so a sold-out deal shows "Sold out" instead of being added
+   and then rolled back; de-duplicate the two snackbars when a countdown
+   expiry and a checkout `410` coincide.
+4. **RES-107:** distinguish "invalid id" from "network error" in the deep-link
+   error view and offer Retry on the latter.
+5. **Backend follow-up (not something I can change here):** `checkout`
+   should validate `flashSaleEndsAt`, not only reservation ids.
